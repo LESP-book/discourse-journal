@@ -80,7 +80,7 @@ nav.post-controls button.comment {
 div.topic-post {
   &.comment {
     display: none;
-    border-left: 2px solid $primary-low;
+    //border-left: 2px solid $primary-low;
 
     &.show {
       display: block;
@@ -129,13 +129,13 @@ div.topic-post {
       .who-liked,
       .who-read {
         position: absolute;
-        background-color: $secondary;
+        //background-color: $secondary;
         box-shadow: shadow("dropdown");
         right: 0;
         margin: 0;
         z-index: 1;
         padding: 0.5em 1em;
-        border-top: 1px solid $primary-low;
+        //border-top: 1px solid $primary-low;
       }
     }
 
