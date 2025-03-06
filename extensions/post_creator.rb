@@ -8,7 +8,7 @@ module DiscourseJournal
 
       guardian.can_create_entry_on_topic?(@topic)
       
-      end
+      
     end
   end
 end
