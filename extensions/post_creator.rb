@@ -6,9 +6,11 @@ module DiscourseJournal
       valid = super
       return false if !valid
 
-      guardian.can_create_entry_on_topic?(@topic)
-      
-      
+     if @topic&.journal && post_is_journal_entry?(@post)
+        guardian.can_create_entry_on_topic?(@topic)
+      else
+        valid
+      end      
     end
   end
 end
