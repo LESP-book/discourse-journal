@@ -1,13 +1,11 @@
 .topic-journal {
   .time-gap,
   nav.post-controls .show-replies,
-  .topic-timeline .reply-to-post,
-  .topic-timeline .timeline-ago,
   .topic-timeline .back-button,
   .topic-timeline .timeline-last-read {
     display: none;
   }
- nav.reply-to-post {
+ .topic-timeline .reply-to-post, .topic-timeline .timeline-ago{
     display: flex;
   }
   
