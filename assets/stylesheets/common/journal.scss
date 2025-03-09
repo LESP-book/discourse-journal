@@ -139,7 +139,7 @@ div.topic-post {
         margin: 0;
         z-index: 3;
         padding: 0.5em 1em;
-        //border-top: 1px solid $primary-low;
+        border-top: 1px solid var(--header_background);
       }
     }
 
