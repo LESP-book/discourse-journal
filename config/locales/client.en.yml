@@ -42,20 +42,20 @@ en:
       
     topic:
       create_journal: 
-        label: "Create Journal"
+        label: "创建话题"
       entry:
-        title: "New Entry"
-        help: "begin composing a new entry"
+        title: "新帖子"
+        help: "创建一个新帖子"
         jump_to: "Jump to entry %{entryNumber}"
       comment:
-        title: 'Comment'
-        help: 'begin composing a comment on this entry'
+        title: '评论'
+        help: '创建此帖子的评论'
         show_comments:
           all: 'show {{count}} comments'
           more: 'show {{count}} more comments'
       comment_reply:
-        title: 'Reply'
-        help: 'reply to a comment'
+        title: '回复'
+        help: '回复此评论'
 
       tip:
         journal:
