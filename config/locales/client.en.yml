@@ -16,20 +16,20 @@ en:
           name: 创建新话题
           description: 创建一个新话题
         create_entry:
-          name: 创建帖子
-          description: 创建一个该话题的新帖子
+          name: 创建该该话题的新回复（将显示为该话题的一个新帖子）
+          description: 创建一个该话题的新回复，将显示一个新的帖子
         edit_entry:
-          name: 编辑帖子
-          description: 编辑该帖子
+          name: 编辑回复
+          description: 编辑该回复
         create_comment:
-          name: 评论
-          description: 对该话题的帖子进行评论
+          name: 创建该帖子的评论（将显示在此帖子下方）
+          description: 对该帖子进行评论，将显示在此帖子下方
         edit_comment:
           name: 编辑评论
           description: 编辑该评论
         reply_to_comment:
-          name: 回复评论
-          description: 回复此评论
+          name: 回复评论（将显示在回复所属帖子的下方）
+          description: 对此评论进行回复，将显示在帖子的下方
 
     last_entry_lowercase: 最近帖子
     entry_lowercase:
@@ -44,18 +44,18 @@ en:
       create_journal: 
         label: "创建话题"
       entry:
-        title: "新帖子"
-        help: "创建一个新帖子"
+        title: "回复该话题"
+        help: "创建该话题的新回复"
         jump_to: "跳到帖子 %{entryNumber}"
       comment:
-        title: '评论'
-        help: '创建此帖子的评论'
+        title: '评论此帖子'
+        help: '仅仅对此帖子进行评论'
         show_comments:
-          all: '展示 {{count}} 条评论'
-          more: '展示其余 {{count}} 条评论'
+          all: '展示 {{count}} 条回复'
+          more: '展示其余 {{count}} 条回复'
       comment_reply:
         title: '回复'
-        help: '回复此评论'
+        help: '对此评论进行回复'
 
       tip:
         journal:
