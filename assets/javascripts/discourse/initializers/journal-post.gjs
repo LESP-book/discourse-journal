@@ -24,11 +24,19 @@ export default {
           context: { post, buttonKeys, lastHiddenButtonKey },
         }) => {
           if (post.topic.details.can_create_post && post.journal) {
-            dag.add("comment", JournalCommentButton, {
-              after: lastHiddenButtonKey,
-            });
-            dag.delete(buttonKeys.REPLY);
-          }
+            if (post.post_number === 1) {
+          // 如果是第一个帖子，保留“回复”按钮
+          dag.add("reply", null, {
+            after: lastHiddenButtonKey,
+          });
+            } else {
+          // 非第一个帖子，添加“评论”按钮并移除“回复”按钮
+          dag.add("comment", JournalCommentButton, {
+            after: lastHiddenButtonKey,
+          });
+          dag.delete(buttonKeys.REPLY);
+        }
+      }
         }
       );
     });

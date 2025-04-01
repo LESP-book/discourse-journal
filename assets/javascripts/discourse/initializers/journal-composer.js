@@ -55,7 +55,7 @@ export default {
         pluginId: PLUGIN_ID,
 
         open(opts) {
-          if (opts.topic && opts.topic.journal && opts.quote && !opts.post) {
+          if (opts.topic && opts.topic.journal && opts.quote && !opts.post && opts.topic.postStream.posts[0].post_number !== 1) {
             opts.post = opts.topic.postStream.posts[0];
           }
           return this._super(opts);
