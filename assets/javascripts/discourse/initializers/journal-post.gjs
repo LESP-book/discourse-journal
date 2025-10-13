@@ -44,7 +44,7 @@ export default {
     withPluginApi("0.8.12", (api) => {
       const store = api.container.lookup("service:store");
 
-      api.includePostAttributes(
+      api.addTrackedPostProperties(
         "journal",
         "reply_to_post_number",
         "comment",
