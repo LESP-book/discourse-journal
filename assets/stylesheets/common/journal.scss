@@ -82,6 +82,7 @@ nav.post-controls button.comment {
 .topic-journal {
   .post__menu-area {
     position: relative;
+    min-height: 40px; // 预留空间防止布局偏移
   }
 
   .small-user-list {
@@ -113,11 +114,17 @@ nav.post-controls button.comment {
 
 div.topic-post {
   &.comment {
-    display: none;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    visibility: hidden;
+    transition: max-height 0.3s ease, opacity 0.3s ease, visibility 0.3s ease;
     //border-left: 2px solid $primary-low;
 
     &.show {
-      display: block;
+      max-height: 5000px; // 足够大的值以容纳任何评论内容
+      opacity: 1;
+      visibility: visible;
     }
 
     .avatar-flair {
