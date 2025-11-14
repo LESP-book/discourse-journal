@@ -79,6 +79,24 @@ nav.post-controls button.comment {
   font-size: 1em;
 }
 
+.topic-journal {
+  .post-controls {
+    position: relative;
+  }
+  .post-actions {
+    position: relative;
+    .who-read,
+    .who-liked {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 0.5em;
+      z-index: 5;
+    }
+  }
+}
+
+
 div.topic-post {
   &.comment {
     display: none;
