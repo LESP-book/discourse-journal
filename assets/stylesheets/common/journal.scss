@@ -79,13 +79,45 @@ nav.post-controls button.comment {
   font-size: 1em;
 }
 
+.topic-journal {
+  // 确保文章容器有稳定的布局
+  article.boxed.onscreen-post {
+    min-height: 100px; // 预留最小高度，防止内容加载时布局抖动
+    contain: layout; // 使用 CSS containment 优化布局性能
+  }
+
+  // 确保内容区域有稳定的布局
+  .post__regular.regular.post__contents.contents {
+    min-height: 50px; // 预留最小高度
+  }
+
+  // 确保菜单区域有足够空间
+  .post__menu-area {
+    position: relative;
+    min-height: 40px; // 预留空间防止布局偏移
+    overflow: visible; // 确保表情选择框不被裁剪
+  }
+
+  // 确保表情选择框显示完整
+  .discourse-reactions-picker {
+    z-index: 1500 !important; // 使用足够高的 z-index 确保显示完整
+  }
+}
+
 div.topic-post {
   &.comment {
-    display: none;
+    // 使用 max-height 和 opacity 代替 display: none 来避免布局抖动
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    visibility: hidden;
+    transition: max-height 0.3s ease, opacity 0.3s ease, visibility 0.3s ease;
     //border-left: 2px solid $primary-low;
 
     &.show {
-      display: block;
+      max-height: 5000px; // 足够大的值以容纳任何评论内容
+      opacity: 1;
+      visibility: visible;
     }
 
     .avatar-flair {

@@ -10,17 +10,25 @@
   .topic-body {
     width: calc(100% - 30px);
     padding: 10px 0 10px 0;
+    position: relative; // 为绝对定位的 .post-menu-area 提供定位上下文
+    min-height: 60px; // 确保有足够空间容纳菜单区域
+    overflow: visible; // 确保表情选择框不被裁剪
 
     .regular {
       margin-top: 0;
+      padding-bottom: 50px; // 为绝对定位的菜单区域预留底部空间
 
       p {
         margin: 0;
       }
 
       .post-controls .actions > *:not(.like):not(.double-button) {
-        display: none;
-        transition: 0.5s all;
+        // 使用 visibility 和 opacity 代替 display: none 来避免布局抖动
+        visibility: hidden;
+        opacity: 0;
+        max-height: 0;
+        overflow: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease, max-height 0.3s ease;
       }
 
       .post-menu-area {
@@ -28,6 +36,7 @@
         right: 0;
         bottom: 0;
         position: absolute;
+        min-height: 40px; // 预留空间防止布局偏移
         //background: var(--secondary);
       }
     }
@@ -38,7 +47,9 @@
   }
 
   &:hover .topic-body .regular .post-controls .actions > * {
-    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    max-height: 100px !important; // 足够容纳按钮的高度
   }
 }
 
@@ -48,13 +59,13 @@
   }
 }
 
-.time-gap + .topic-post.entry,
-.time-gap + .topic-post.comment {
-  .topic-avatar,
-  .topic-body {
-    //border-top: 1px solid $primary-low;
-  }
-}
+// .time-gap + .topic-post.entry,
+// .time-gap + .topic-post.comment {
+//   .topic-avatar,
+//   .topic-body {
+//     border-top: 1px solid $primary-low;
+//   }
+// }
 
 .topic-post.entry + .time-gap,
 .topic-post.comment + .time-gap {
