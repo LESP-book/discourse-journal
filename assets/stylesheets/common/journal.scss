@@ -80,36 +80,34 @@ nav.post-controls button.comment {
 }
 
 .topic-journal {
-  .post-controls {
+  .post__menu-area {
     position: relative;
   }
-  .post-actions {
-    position: relative;
-      .small-user-list {
-      position: absolute;
-      top: calc(100% + 0.5em);
-      right: 0;
-      width: 220px;
-      max-height: 200px;
-      overflow-y: auto;
-      background-color: var(--header_background);
-      box-shadow: shadow("dropdown");
-      border: 1px solid var(--primary-low);
-      border-radius: 3px;
-      padding: 0.5em;
-      opacity: 0;
-      pointer-events: none;
-      transform: translateY(4px);
-      transition: opacity 0.15s ease;
-      z-index: 5;
-    }
-    .small-user-list.--expanded {
-      opacity: 1;
-      pointer-events: auto;
-    }
-      z-index: 5;
-    }
+
+  .small-user-list {
+    position: absolute;
+    top: calc(100% + 0.5em);
+    right: 0;
+    width: 220px;
+    max-height: 200px;
+    overflow-y: auto;
+    background-color: var(--header_background);
+    box-shadow: shadow("dropdown");
+    border: 1px solid var(--primary-low);
+    border-radius: 3px;
+    padding: 0.5em;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(4px);
+    transition: opacity 0.15s ease;
+    z-index: 5;
   }
+
+  .small-user-list.--expanded {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
 
 
 
