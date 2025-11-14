@@ -7,16 +7,17 @@
     width: 30px;
     display: flex;
     align-items: flex-start;
+    top: 0.5em;
     padding-top: var(--space-1); // 与 topic-meta-data 对齐
   }
 
   .topic-body {
     width: calc(100% - 30px);
-    padding: 10px 0 10px 0;
+    padding: 20px 0 10px 0;
     position: relative; // 为绝对定位的 .post-menu-area 提供定位上下文
     min-height: 60px; // 确保有足够空间容纳菜单区域
     overflow: visible; // 确保表情选择框不被裁剪
-
+    
     .regular {
       margin-top: 0;
       padding-bottom: 50px; // 为绝对定位的菜单区域预留底部空间
