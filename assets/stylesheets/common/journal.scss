@@ -212,6 +212,33 @@ div.topic-post {
       display: none;
     }
   }
+
+  // 修复 entry 类型帖子的头像和用户名对齐
+  &.entry {
+    .row {
+      display: flex;
+      align-items: flex-start;
+    }
+
+    .topic-avatar {
+      display: flex;
+      align-items: center; // 头像内容居中对齐
+      justify-content: center;
+      padding-top: var(--space-4); // 保持默认 padding-top
+    }
+
+    .topic-body {
+      padding-top: var(--space-4); // 与头像的 padding-top 对齐
+
+      .topic-meta-data {
+        display: flex;
+        align-items: center;
+        padding-top: 0; // 移除顶部 padding，因为 topic-body 已经有了
+        min-height: auto;
+        line-height: 1.4; // 确保行高一致
+      }
+    }
+  }
 }
 
 .show-comments {
