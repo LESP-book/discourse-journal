@@ -83,6 +83,22 @@ nav.post-controls button.comment {
   .post__menu-area {
     position: relative;
     min-height: 40px; // 预留空间防止布局偏移
+    overflow: visible; // 确保表情选择框不被裁剪
+    z-index: 10; // 提高层级，确保表情选择框显示在上方
+  }
+
+  // 确保表情选择框显示完整
+  .discourse-reactions-picker {
+    z-index: 1500 !important; // 使用足够高的 z-index 确保显示完整（高于 dropdown 的 300）
+  }
+
+  // 确保评论中的表情选择框也能正常显示
+  .topic-post.comment {
+    .post__menu-area,
+    .post-menu-area {
+      overflow: visible;
+      z-index: 10;
+    }
   }
 
   .small-user-list {
@@ -140,6 +156,9 @@ div.topic-post {
     .topic-body {
       .topic-meta-data {
         padding: 0 5px 0.25em 11px;
+        display: flex;
+        align-items: center; // 确保用户名与头像垂直对齐
+        min-height: 30px; // 与头像高度匹配
       }
 
       .cooked {
