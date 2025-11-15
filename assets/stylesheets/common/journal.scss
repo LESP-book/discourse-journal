@@ -115,7 +115,7 @@ div.topic-post {
     //border-left: 2px solid $primary-low;
 
     &.show {
-      max-height: 5000px; // 足够大的值以容纳任何评论内容
+      max-height: 500000px; // 足够大的值以容纳任何评论内容
       opacity: 1;
       visibility: visible;
     }
