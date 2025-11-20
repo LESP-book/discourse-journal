@@ -102,6 +102,18 @@ nav.post-controls button.comment {
   .discourse-reactions-picker {
     z-index: 1500 !important; // 使用足够高的 z-index 确保显示完整
   }
+
+  // 确保 FormKit 下拉菜单（如最近浏览量、热门连接）显示在最上方且不透明
+  .fk-d-menu {
+    z-index: 2000 !important; // 确保下拉菜单显示在所有内容之上
+  }
+
+  .fk-d-menu__inner-content {
+    z-index: 2001 !important; // 确保菜单内容显示在最上方
+    opacity: 1 !important; // 确保完全不透明
+    background-color: var(--secondary) !important; // 确保有适当的背景色
+    box-shadow: shadow("dropdown") !important; // 添加阴影以增强视觉分离
+  }
 }
 
 div.topic-post {
