@@ -5,10 +5,11 @@
   .topic-timeline .timeline-last-read {
     display: none;
   }
- .topic-timeline .reply-to-post, .topic-timeline .timeline-ago{
+
+  .topic-timeline .reply-to-post,
+  .topic-timeline .timeline-ago {
     display: flex;
   }
-  
 
   .topic-timeline .timeline-entries {
     position: absolute;
@@ -73,17 +74,10 @@
   .topic-body .reply-to-tab {
     cursor: initial;
   }
-}
 
-nav.post-controls button.comment {
-  font-size: 1em;
-}
-
-.topic-journal {
   // 确保文章容器有稳定的布局
   article.boxed.onscreen-post {
     min-height: 100px; // 预留最小高度，防止内容加载时布局抖动
-    contain: layout; // 使用 CSS containment 优化布局性能
   }
 
   // 确保内容区域有稳定的布局
@@ -103,17 +97,23 @@ nav.post-controls button.comment {
     z-index: 1500 !important; // 使用足够高的 z-index 确保显示完整
   }
 
-  // 确保 FormKit 下拉菜单（如最近浏览量、热门连接）显示在最上方且不透明
-  .fk-d-menu {
-    z-index: 2000 !important; // 确保下拉菜单显示在所有内容之上
+  // 只针对 topic-map 下拉，提升层级并保持不透明
+  .fk-d-menu[data-identifier^="topic-map__"] {
+    position: absolute !important;
+    z-index: 6000 !important;
   }
 
-  .fk-d-menu__inner-content {
-    z-index: 2001 !important; // 确保菜单内容显示在最上方
-    opacity: 1 !important; // 确保完全不透明
-    background-color: var(--secondary) !important; // 确保有适当的背景色
-    box-shadow: shadow("dropdown") !important; // 添加阴影以增强视觉分离
+  .fk-d-menu[data-identifier^="topic-map__"] .fk-d-menu__inner-content,
+  .fk-d-menu-modal[data-identifier^="topic-map__"] .fk-d-menu__inner-content {
+    opacity: 1 !important;
+    background-color: var(--secondary) !important;
+    box-shadow: var(--shadow-dropdown) !important;
   }
+
+}
+
+  nav.post-controls button.comment {
+  font-size: 1em;
 }
 
 div.topic-post {
@@ -124,7 +124,6 @@ div.topic-post {
     opacity: 0;
     visibility: hidden;
     transition: max-height 0.3s ease, opacity 0.3s ease, visibility 0.3s ease;
-    //border-left: 2px solid $primary-low;
 
     &.show {
       max-height: 500000px; // 足够大的值以容纳任何评论内容
@@ -182,7 +181,6 @@ div.topic-post {
         right: 0;
         margin: 0;
         z-index: 3;
-        //padding: 0.5em 1em;
         border-top: 1px solid var(--header_background);
       }
     }
