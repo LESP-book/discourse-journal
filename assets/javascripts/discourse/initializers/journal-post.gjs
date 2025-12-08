@@ -69,34 +69,39 @@ function extendPostStreamModel(api, siteSettings) {
 
         getCommentIndex(post) {
           const posts = this.posts || [];
-          const entryId = this._entryIdForPost(post);
+          const entryId = this._entryIdForPost(post, posts);
 
           if (!posts.length || !entryId) {
             return null;
           }
 
-          let commentIndex = null;
+          const entryIndex = posts.findIndex((p) => p?.id === entryId);
+          if (entryIndex === -1) {
+            return null;
+          }
 
-          for (let index = 0; index < posts.length; index++) {
+          let commentIndex = entryIndex + 1;
+
+          for (let index = entryIndex + 1; index < posts.length; index++) {
             const currentPost = posts[index];
 
             if (!currentPost) {
               continue;
             }
 
-            const currentEntryId = this._entryIdForPost(currentPost);
+            const currentEntryId = this._entryIdForPost(currentPost, posts);
 
             if (currentEntryId === entryId) {
               commentIndex = index + 1;
               continue;
             }
 
-            if (commentIndex !== null && !currentPost.reply_to_post_number) {
+            if (!currentPost.reply_to_post_number) {
               break;
             }
           }
 
-          return commentIndex;
+          return commentIndex ?? entryIndex + 1;
         }
 
         /**
@@ -106,7 +111,7 @@ function extendPostStreamModel(api, siteSettings) {
          * @param {object} post
          * @returns {number|null}
          */
-        _entryIdForPost(post) {
+        _entryIdForPost(post, postsList = this.posts || []) {
           if (!post) {
             return null;
           }
@@ -119,7 +124,6 @@ function extendPostStreamModel(api, siteSettings) {
             return post.id;
           }
 
-          const posts = this.posts || [];
           const seen = new Set();
           let current = post;
 
@@ -134,9 +138,18 @@ function extendPostStreamModel(api, siteSettings) {
             }
 
             const replyToPostNumber = current.reply_to_post_number;
-            const parent = posts.find(
-              (p) => p?.post_number === replyToPostNumber
-            );
+            const replyToPostId = current.reply_to_post_id;
+            let parent = null;
+
+            for (const candidate of postsList) {
+              if (
+                candidate?.post_number === replyToPostNumber ||
+                candidate?.id === replyToPostId
+              ) {
+                parent = candidate;
+                break;
+              }
+            }
 
             if (!parent) {
               return null;
@@ -189,6 +202,7 @@ function extendPostStreamModel(api, siteSettings) {
           if (post?.reply_to_post_number) {
             this.insertCommentInStream(post);
             this._reorderStoredPost(post);
+            this._rebuildJournalOrder();
           }
 
           this._applyJournalCommentState();
@@ -205,6 +219,7 @@ function extendPostStreamModel(api, siteSettings) {
           if (post?.reply_to_post_number) {
             this.insertCommentInStream(post);
             this._reorderStoredPost(post);
+            this._rebuildJournalOrder();
           }
 
           this._applyJournalCommentState();
@@ -231,6 +246,7 @@ function extendPostStreamModel(api, siteSettings) {
           }
 
           this._applyJournalCommentState();
+          this._rebuildJournalOrder();
 
           return result;
         }
@@ -244,6 +260,7 @@ function extendPostStreamModel(api, siteSettings) {
           if (post?.reply_to_post_number) {
             this.insertCommentInStream(post);
             this._reorderStoredPost(post);
+            this._rebuildJournalOrder();
           }
 
           this._applyJournalCommentState();
@@ -387,10 +404,80 @@ function extendPostStreamModel(api, siteSettings) {
           const result = super.updateFromJson(...args);
 
           if (this.journal) {
+            this._rebuildJournalOrder();
             this._applyJournalCommentState();
           }
 
           return result;
+        }
+
+        _rebuildJournalOrder() {
+          if (!this.journal || !this.posts?.length) {
+            return;
+          }
+
+          const posts = this.posts;
+          const snapshot = posts.slice();
+
+          const entryIds =
+            this.topic?.entry_post_ids?.length > 0
+              ? this.topic.entry_post_ids
+              : snapshot
+                  .filter((p) => p?.entry)
+                  .map((p) => p.id)
+                  .filter(Boolean);
+
+          const orderedPosts = [];
+          const seen = new Set();
+
+          entryIds.forEach((entryId) => {
+            const entryPost = snapshot.find((p) => p?.id === entryId);
+            if (entryPost) {
+              orderedPosts.push(entryPost);
+              seen.add(entryPost.id);
+            }
+
+            const comments = snapshot
+              .filter(
+                (p) =>
+                  !p?.entry &&
+                  this._entryIdForPost(p, snapshot) === entryId
+              )
+              .sort((a, b) => (a.post_number || 0) - (b.post_number || 0));
+
+            comments.forEach((comment) => {
+              if (!seen.has(comment.id)) {
+                orderedPosts.push(comment);
+                seen.add(comment.id);
+              }
+            });
+          });
+
+          snapshot.forEach((post) => {
+            if (post?.id && !seen.has(post.id)) {
+              orderedPosts.push(post);
+              seen.add(post.id);
+            }
+          });
+
+          if (orderedPosts.length !== posts.length) {
+            return;
+          }
+
+          if (typeof posts.setObjects === "function") {
+            posts.setObjects(orderedPosts);
+          } else {
+            posts.length = 0;
+            orderedPosts.forEach((p) => posts.push(p));
+          }
+
+          const newStream = orderedPosts.map((p) => p?.id).filter(Boolean);
+          const stream = this.stream;
+          if (typeof stream.setObjects === "function") {
+            stream.setObjects(newStream);
+          } else {
+            stream.splice(0, stream.length, ...newStream);
+          }
         }
       }
   );
