@@ -69,43 +69,113 @@ function extendPostStreamModel(api, siteSettings) {
 
         getCommentIndex(post) {
           const posts = this.posts || [];
-          let passed = false;
+          const entryId = this._entryIdForPost(post);
+
+          if (!posts.length || !entryId) {
+            return null;
+          }
+
           let commentIndex = null;
 
-          posts.some((p, i) => {
-            if (passed && !p.reply_to_post_number) {
-              commentIndex = i;
-              return true;
+          for (let index = 0; index < posts.length; index++) {
+            const currentPost = posts[index];
+
+            if (!currentPost) {
+              continue;
             }
 
-            if (
-              p.post_number === post.reply_to_post_number &&
-              i < posts.length - 1
-            ) {
-              passed = true;
+            const currentEntryId = this._entryIdForPost(currentPost);
+
+            if (currentEntryId === entryId) {
+              commentIndex = index + 1;
+              continue;
             }
 
-            return false;
-          });
+            if (commentIndex !== null && !currentPost.reply_to_post_number) {
+              break;
+            }
+          }
 
           return commentIndex;
+        }
+
+        /**
+         * Determine the entry id a post belongs to by checking explicit journal
+         * metadata first, then walking up the reply chain with cycle protection.
+         *
+         * @param {object} post
+         * @returns {number|null}
+         */
+        _entryIdForPost(post) {
+          if (!post) {
+            return null;
+          }
+
+          if (post.entry_post_id) {
+            return post.entry_post_id;
+          }
+
+          if (post.entry) {
+            return post.id;
+          }
+
+          const posts = this.posts || [];
+          const seen = new Set();
+          let current = post;
+
+          while (current?.reply_to_post_number) {
+            const currentKey = current.id || current.post_number;
+            if (currentKey && seen.has(currentKey)) {
+              return null;
+            }
+
+            if (currentKey) {
+              seen.add(currentKey);
+            }
+
+            const replyToPostNumber = current.reply_to_post_number;
+            const parent = posts.find(
+              (p) => p?.post_number === replyToPostNumber
+            );
+
+            if (!parent) {
+              return null;
+            }
+
+            if (parent.entry_post_id) {
+              return parent.entry_post_id;
+            }
+
+            if (parent.entry) {
+              return parent.id;
+            }
+
+            current = parent;
+          }
+
+          return null;
         }
 
         insertCommentInStream(post) {
           const stream = this.stream;
           const postId = post.id;
-          const commentIndex = this.getCommentIndex(post) - 1;
+          const commentIndex = this.getCommentIndex(post);
 
-          if (stream.indexOf(postId) > -1 && commentIndex && commentIndex > 0) {
-            if (typeof stream.removeObject === "function") {
+          if (stream.indexOf(postId) > -1 && commentIndex !== null) {
+            if (
+              typeof stream.removeObject === "function" &&
+              typeof stream.insertAt === "function"
+            ) {
               stream.removeObject(postId);
-              stream.insertAt(commentIndex, postId);
+              const targetIndex = Math.min(commentIndex, stream.length);
+              stream.insertAt(targetIndex, postId);
             } else {
               const currentIndex = stream.indexOf(postId);
               if (currentIndex > -1) {
                 stream.splice(currentIndex, 1);
               }
-              stream.splice(commentIndex, 0, postId);
+              const targetIndex = Math.min(commentIndex, stream.length);
+              stream.splice(targetIndex, 0, postId);
             }
           }
         }
@@ -271,7 +341,7 @@ function extendPostStreamModel(api, siteSettings) {
           }
 
           const commentIndex = this.getCommentIndex(stored);
-          if (commentIndex && commentIndex > 0) {
+          if (commentIndex !== null && commentIndex > -1) {
             this._moveStoredPost(stored, commentIndex);
           }
         }
@@ -291,14 +361,26 @@ function extendPostStreamModel(api, siteSettings) {
 
         _moveStoredPost(stored, targetIndex) {
           const posts = this.posts;
-          const currentIndex = posts.indexOf(stored);
 
-          if (currentIndex === -1 || currentIndex === targetIndex) {
-            return;
+          if (
+            typeof posts.removeObject === "function" &&
+            typeof posts.insertAt === "function"
+          ) {
+            const currentIndex = posts.indexOf(stored);
+            if (currentIndex !== -1 && currentIndex !== targetIndex) {
+              posts.removeObject(stored);
+              const safeTargetIndex = Math.min(targetIndex, posts.length);
+              posts.insertAt(safeTargetIndex, stored);
+            }
+          } else {
+            const currentIndex = posts.indexOf(stored);
+            if (currentIndex === -1 || currentIndex === targetIndex) {
+              return;
+            }
+            const [item] = posts.splice(currentIndex, 1);
+            const safeTargetIndex = Math.min(targetIndex, posts.length);
+            posts.splice(safeTargetIndex, 0, item);
           }
-
-          const [item] = posts.splice(currentIndex, 1);
-          posts.splice(targetIndex, 0, item);
         }
 
         updateFromJson(...args) {
@@ -331,8 +413,25 @@ function registerGlimmerMetaDataTransformer(api) {
   api.registerValueTransformer(
     "post-meta-data-infos",
     ({ value: metadata, context: { post, metaDataInfoKeys } }) => {
-      if (post?.journal && post.entry) {
+      if (!post?.journal) {
+        return;
+      }
+
+      if (post.entry) {
         metadata.delete(metaDataInfoKeys.REPLY_TO_TAB);
+      } else if (post.comment) {
+        // If it's a direct comment on the entry, hide the reply tab.
+        // If it's a reply to another comment, keep it.
+        // We find the entry to compare post numbers.
+        const postStream = post.topic?.postStream;
+        // Optimization: try to find entry by ID in stream, or rely on data if available
+        // post.entry_post_id is available.
+        if (postStream && post.entry_post_id) {
+          const entry = postStream.findLoadedPost(post.entry_post_id);
+          if (entry && post.reply_to_post_number === entry.post_number) {
+            metadata.delete(metaDataInfoKeys.REPLY_TO_TAB);
+          }
+        }
       }
     }
   );
@@ -371,7 +470,7 @@ export default {
       return;
     }
 
-    withPluginApi("1.34.0", (api) => {
+    withPluginApi((api) => {
       registerPostMenuButtons(api);
       registerTrackedPostProperties(api);
       registerPostClasses(api);

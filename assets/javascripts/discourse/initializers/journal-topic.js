@@ -1,6 +1,5 @@
 import { scheduleOnce } from "@ember/runloop";
 import discourseComputed from "discourse/lib/decorators";
-import KeyboardShortcuts from "discourse/lib/keyboard-shortcuts";
 import { withPluginApi } from "discourse/lib/plugin-api";
 
 const PLUGIN_ID = "discourse-journal";
@@ -9,11 +8,12 @@ export default {
   name: "journal-topic",
   initialize(container) {
     const siteSettings = container.lookup("service:site-settings");
+    const keyboardShortcuts = container.lookup("service:keyboard-shortcuts");
     if (!siteSettings.journal_enabled) {
       return;
     }
 
-    withPluginApi("0.8.12", (api) => {
+    withPluginApi((api) => {
       api.modifyClass("route:topic", {
         pluginId: PLUGIN_ID,
 
@@ -26,16 +26,16 @@ export default {
         actions: {
           didTransition() {
             if (this.isJournal()) {
-              KeyboardShortcuts.pause(["c"]);
-              $("body").addClass("topic-journal");
+              keyboardShortcuts.pause(["c"]);
+              document.body?.classList.add("topic-journal");
             }
             return this._super(...arguments);
           },
 
           willTransition() {
             if (this.isJournal()) {
-              KeyboardShortcuts.unpause(["c"]);
-              $("body").removeClass("topic-journal");
+              keyboardShortcuts.unpause(["c"]);
+              document.body?.classList.remove("topic-journal");
             }
             return this._super(...arguments);
           },
@@ -70,16 +70,20 @@ export default {
 
           const journalEnabled = this.get("topic.journal");
           if (journalEnabled) {
-            scheduleOnce("afterRender", () => {
-              $(
-                ".topic-footer-main-buttons > button.create",
-                this.element
-              ).hide();
-            });
+            scheduleOnce("afterRender", this, this._hideCreateButton);
+          }
+        },
+
+        _hideCreateButton() {
+          const createButton = this.element?.querySelector(
+            ".topic-footer-main-buttons > button.create"
+          );
+
+          if (createButton) {
+            createButton.style.display = "none";
           }
         },
       });
-
 
     });
   },
