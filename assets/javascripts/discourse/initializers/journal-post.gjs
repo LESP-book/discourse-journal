@@ -471,8 +471,33 @@ function extendPostStreamModel(api, siteSettings) {
             orderedPosts.forEach((p) => posts.push(p));
           }
 
-          const newStream = orderedPosts.map((p) => p?.id).filter(Boolean);
           const stream = this.stream;
+          const orderedIds = orderedPosts.map((p) => p?.id).filter(Boolean);
+
+          if (!stream?.length || !orderedIds.length) {
+            return;
+          }
+
+          const orderedIdSet = new Set(orderedIds);
+          const orderedStreamIds = stream.filter((id) => orderedIdSet.has(id));
+
+          if (orderedStreamIds.length !== orderedIds.length) {
+            return;
+          }
+
+          const replacementQueue = [...orderedIds];
+          const newStream = stream.map((id) => {
+            if (!orderedIdSet.has(id)) {
+              return id;
+            }
+
+            return replacementQueue.shift() ?? id;
+          });
+
+          if (replacementQueue.length) {
+            return;
+          }
+
           if (typeof stream.setObjects === "function") {
             stream.setObjects(newStream);
           } else {
