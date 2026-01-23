@@ -1,5 +1,4 @@
 node_modules
 /gems
 /auto_generated
-CLAUDE.md
-AGENTS.md
+.idea/
