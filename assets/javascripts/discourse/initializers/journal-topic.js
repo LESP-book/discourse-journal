@@ -1,5 +1,4 @@
-import { scheduleOnce } from "@ember/runloop";
-import discourseComputed from "discourse/lib/decorators";
+import { computed } from "@ember/object";
 import { withPluginApi } from "discourse/lib/plugin-api";
 
 const PLUGIN_ID = "discourse-journal";
@@ -45,44 +44,20 @@ export default {
       api.modifyClass("model:topic", {
         pluginId: PLUGIN_ID,
 
-        @discourseComputed("journal")
-        showJournalTip(journalEnabled) {
-          return journalEnabled && siteSettings.journal_show_topic_tip;
-        },
+        showJournalTip: computed("journal", function () {
+          return this.journal && siteSettings.journal_show_topic_tip;
+        }),
 
-        @discourseComputed(
+        lastPostUrl: computed(
           "highest_post_number",
           "url",
-          "last_entry_post_number"
-        )
-        lastPostUrl(highestPostNumber, url, lastEntryPostNumber) {
-          return lastEntryPostNumber
-            ? this.urlForPostNumber(lastEntryPostNumber)
-            : this.urlForPostNumber(highestPostNumber);
-        },
-      });
-
-      api.modifyClass("component:topic-footer-buttons", {
-        pluginId: PLUGIN_ID,
-
-        didInsertElement() {
-          this._super(...arguments);
-
-          const journalEnabled = this.get("topic.journal");
-          if (journalEnabled) {
-            scheduleOnce("afterRender", this, this._hideCreateButton);
+          "last_entry_post_number",
+          function () {
+            return this.last_entry_post_number
+              ? this.urlForPostNumber(this.last_entry_post_number)
+              : this.urlForPostNumber(this.highest_post_number);
           }
-        },
-
-        _hideCreateButton() {
-          const createButton = this.element?.querySelector(
-            ".topic-footer-main-buttons > button.create"
-          );
-
-          if (createButton) {
-            createButton.style.display = "none";
-          }
-        },
+        ),
       });
 
     });
