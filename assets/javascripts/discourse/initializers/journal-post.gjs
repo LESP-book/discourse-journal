@@ -40,7 +40,8 @@ function registerTrackedPostProperties(api) {
     "commentPageCount",
     "commentPageStart",
     "commentPageEnd",
-    "commentCount"
+    "commentCount",
+    "commentPaginationExpanded"
   );
 }
 
@@ -287,6 +288,25 @@ function extendPostStreamModel(api, siteSettings) {
             entryPostId,
             Math.floor(pageNumber)
           );
+          this._ensureJournalExpandedCommentPaginators().add(entryPostId);
+          this._applyJournalCommentState();
+        }
+
+        setJournalCommentPaginationExpanded(entryPostId, expanded) {
+          if (!this.journal || !entryPostId) {
+            return;
+          }
+
+          const expandedPaginators =
+            this._ensureJournalExpandedCommentPaginators();
+
+          if (expanded) {
+            expandedPaginators.add(entryPostId);
+          } else {
+            expandedPaginators.delete(entryPostId);
+            this._ensureJournalCommentPages().set(entryPostId, 1);
+          }
+
           this._applyJournalCommentState();
         }
 
@@ -300,7 +320,7 @@ function extendPostStreamModel(api, siteSettings) {
             return;
           }
 
-          const pageSize = this._journalCommentPageSize();
+          const defaultComments = this._journalDefaultCommentCount();
           const commentGroups = new Map();
 
           posts.forEach((post) => {
@@ -319,6 +339,7 @@ function extendPostStreamModel(api, siteSettings) {
                 commentPageStart: 0,
                 commentPageEnd: 0,
                 commentCount: 0,
+                commentPaginationExpanded: false,
               });
 
               if (!entryId) {
@@ -341,6 +362,7 @@ function extendPostStreamModel(api, siteSettings) {
                 commentPageStart: 0,
                 commentPageEnd: 0,
                 commentCount: 0,
+                commentPaginationExpanded: false,
               });
             }
           });
@@ -348,28 +370,36 @@ function extendPostStreamModel(api, siteSettings) {
           commentGroups.forEach((comments, entryId) => {
             const commentCount = comments.length;
 
-            if (pageSize <= 0 || commentCount <= pageSize) {
+            if (defaultComments <= 0 || commentCount <= defaultComments) {
               comments.forEach((comment) => {
                 comment.setProperties?.({
                   showComment: true,
                   attachCommentPagination: false,
                   commentPage: 1,
-                  commentPageCount: 1,
-                  commentPageStart: commentCount > 0 ? 1 : 0,
-                  commentPageEnd: commentCount,
-                  commentCount,
-                });
+                commentPageCount: 1,
+                commentPageStart: commentCount > 0 ? 1 : 0,
+                commentPageEnd: commentCount,
+                commentCount,
+                commentPaginationExpanded: false,
+              });
               });
               return;
             }
 
-            const pageCount = Math.ceil(commentCount / pageSize);
+            const expandedPageSize = this._journalExpandedCommentPageSize();
+            const pageCount = Math.ceil(commentCount / expandedPageSize);
+            const paginationExpanded =
+              this._ensureJournalExpandedCommentPaginators().has(entryId);
             const currentPage = this._currentJournalCommentPage(
               entryId,
               pageCount
             );
-            const startIndex = (currentPage - 1) * pageSize;
-            const endIndex = Math.min(startIndex + pageSize, commentCount);
+            const startIndex = paginationExpanded
+              ? (currentPage - 1) * expandedPageSize
+              : 0;
+            const endIndex = paginationExpanded
+              ? Math.min(startIndex + expandedPageSize, commentCount)
+              : defaultComments;
             let paginationPost = null;
 
             comments.forEach((comment, index) => {
@@ -383,6 +413,7 @@ function extendPostStreamModel(api, siteSettings) {
                 commentPageStart: startIndex + 1,
                 commentPageEnd: endIndex,
                 commentCount,
+                commentPaginationExpanded: paginationExpanded,
               });
 
               if (showComment) {
@@ -404,8 +435,28 @@ function extendPostStreamModel(api, siteSettings) {
           return this._journalCommentPages;
         }
 
-        _journalCommentPageSize() {
+        _ensureJournalExpandedCommentPaginators() {
+          if (!this._journalExpandedCommentPaginators) {
+            this._journalExpandedCommentPaginators = new Set();
+          }
+
+          return this._journalExpandedCommentPaginators;
+        }
+
+        _journalDefaultCommentCount() {
           return Number(siteSettings.journal_comments_default) || 0;
+        }
+
+        _journalExpandedCommentPageSize() {
+          const defaultComments = this._journalDefaultCommentCount();
+          const expandedComments =
+            Number(siteSettings.journal_comments_expanded_per_page) || 0;
+
+          if (defaultComments <= 0) {
+            return expandedComments;
+          }
+
+          return Math.max(defaultComments, expandedComments);
         }
 
         _currentJournalCommentPage(entryPostId, pageCount) {
@@ -425,7 +476,7 @@ function extendPostStreamModel(api, siteSettings) {
             return;
           }
 
-          const pageSize = this._journalCommentPageSize();
+          const pageSize = this._journalExpandedCommentPageSize();
           if (pageSize <= 0) {
             return;
           }

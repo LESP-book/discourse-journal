@@ -38,7 +38,8 @@
 |--------|------|--------|--------|------|
 | `journal_enabled` | bool | true | true | 启用日志插件 |
 | `journal_show_topic_tip` | bool | true | true | 在日志话题标题下显示提示 |
-| `journal_comments_default` | integer | 3 | true | 每页显示的日志评论数 |
+| `journal_comments_default` | integer | 3 | true | 展开前默认显示的评论数 |
+| `journal_comments_expanded_per_page` | integer | 10 | true | 展开后每页显示的评论数，运行时不会小于默认显示数 |
 | `journal_entries_timeline` | bool | false | true | 启用日志条目时间线 |
 
 ### 访问方式
@@ -47,6 +48,7 @@
 ```ruby
 SiteSetting.journal_enabled
 SiteSetting.journal_comments_default
+SiteSetting.journal_comments_expanded_per_page
 ```
 
 **JavaScript (前端)**:
@@ -55,6 +57,7 @@ SiteSetting.journal_comments_default
 // 使用
 this.siteSettings.journal_enabled
 this.siteSettings.journal_comments_default
+this.siteSettings.journal_comments_expanded_per_page
 ```
 
 ## 路由 (routes.rb)
@@ -97,6 +100,7 @@ en:
     topic:
       comment:
         pagination:
+          expand: "展开其余 %{count} 条评论（共 %{total} 条）"
           total: "共 %{total} 条评论"
           first: "首页"
           previous: "上一页"
@@ -104,10 +108,7 @@ en:
           last: "尾页"
           jump_label: "跳到"
           jump: "跳转"
-          view_thread: "查看全部"
-        thread:
-          title: "本帖与 %{count} 条评论"
-          close: "关闭"
+          collapse: "收起"
 ```
 
 **server.*.yml** (后端):
@@ -116,7 +117,8 @@ en:
   site_settings:
     journal_enabled: "Enable journal plugin."
     journal_show_topic_tip: "Show a tip about journals..."
-    journal_comments_default: "Number of journal comments to display per page."
+    journal_comments_default: "Number of journal comments to display before expanding pagination."
+    journal_comments_expanded_per_page: "Number of journal comments to display per page after expanding..."
 ```
 
 ### 添加新翻译

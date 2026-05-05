@@ -52,6 +52,7 @@ en:
         help: '仅仅对此帖子进行回复'
         pagination:
           label: '评论分页'
+          expand: '展开其余 {{count}} 条评论（共 {{total}} 条）'
           total: '共 {{total}} 条评论'
           first: '首页'
           previous: '上一页'
@@ -59,10 +60,7 @@ en:
           last: '尾页'
           jump_label: '跳到'
           jump: '跳转'
-          view_thread: '查看全部'
-        thread:
-          title: '本帖与 {{count}} 条评论'
-          close: '关闭'
+          collapse: '收起'
       comment_reply:
         title: '回复'
         help: '回复该评论'

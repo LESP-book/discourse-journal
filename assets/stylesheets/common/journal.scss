@@ -208,6 +208,24 @@ div.topic-post {
   flex-wrap: wrap;
   gap: 0.5em;
   margin: 0.5em 0 1em;
+
+  &.is-collapsed {
+    margin: 0.25em 0 0.75em;
+  }
+}
+
+.journal-comment-pagination__expand {
+  background: none;
+  border: 0;
+  color: var(--tertiary);
+  cursor: pointer;
+  padding: 0;
+
+  &:hover,
+  &:focus {
+    color: var(--tertiary-hover);
+    text-decoration: underline;
+  }
 }
 
 .journal-comment-pagination__total {
@@ -253,44 +271,8 @@ div.topic-post {
   }
 }
 
-.journal-comment-pagination__thread {
+.journal-comment-pagination__collapse {
   white-space: nowrap;
-}
-
-.journal-comment-thread-modal {
-  .d-modal__container {
-    max-width: 860px;
-  }
-}
-
-.journal-comment-thread {
-  display: flex;
-  flex-direction: column;
-  gap: 1em;
-  max-height: 70vh;
-  overflow: auto;
-}
-
-.journal-comment-thread__post {
-  border-bottom: 1px solid var(--primary-low);
-  padding-bottom: 1em;
-
-  &.is-entry {
-    border-bottom-color: var(--primary-medium);
-  }
-}
-
-.journal-comment-thread__post-header {
-  align-items: center;
-  color: var(--primary-medium);
-  display: flex;
-  gap: 0.5em;
-  margin-bottom: 0.5em;
-}
-
-.journal-comment-thread__username {
-  color: var(--primary);
-  font-weight: 700;
 }
 
 .journal-topic-tip {

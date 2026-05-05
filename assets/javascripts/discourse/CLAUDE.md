@@ -41,8 +41,7 @@ discourse/
 | 文件 | 职责 |
 |------|------|
 | `journal-comment-button.gjs` | 帖子上的评论/回复按钮，区分条目和评论的回复行为 |
-| `journal-comment-pagination.gjs` | 日志评论分页控件，控制当前条目评论页码、跳页和查看全部 |
-| `modal/journal-comment-thread.gjs` | 本帖与全部评论弹窗 |
+| `journal-comment-pagination.gjs` | 日志评论分页控件，默认轻量按钮，展开后控制当前条目评论页码和跳页 |
 | `journal-topic-tip.gjs` | 话题顶部的日志说明提示组件 |
 | `journal-group-chooser.js` | 分类设置中的作者组选择器 |
 
@@ -76,7 +75,7 @@ const PLUGIN_ID = "discourse-journal";
 ### 帖子流处理
 
 1. **重排序**：根据后端的 `journal_post_map` 重新排列帖子
-2. **评论分页**：每页显示 N 条评论（由 `journal_comments_default` 控制），默认显示第一页
+2. **评论分页**：展开前显示 `journal_comments_default` 条评论，展开后每页显示 `journal_comments_expanded_per_page` 条评论且不小于默认显示数
 3. **类型标记**：为帖子添加 `entry` 或 `comment` CSS 类
 
 ### 状态管理
@@ -126,7 +125,6 @@ withPluginApi("0.8.12", (api) => {
 当前缺少 QUnit 测试。建议为以下功能添加测试：
 - 帖子流重排序逻辑
 - 评论分页行为
-- 本帖与全部评论弹窗
 - 权限相关的 UI 显示
 
 ## 变更记录

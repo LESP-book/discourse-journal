@@ -3,24 +3,16 @@ import { tracked } from "@glimmer/tracking";
 import { fn } from "@ember/helper";
 import { on } from "@ember/modifier";
 import { action } from "@ember/object";
-import { service } from "@ember/service";
 import { eq, not } from "discourse/truth-helpers";
 import { i18n } from "discourse-i18n";
-import JournalCommentThread from "./modal/journal-comment-thread";
 
 // 页码按钮只展示当前页附近窗口、首页和尾页，避免大量评论时控件横向撑爆。
 const PAGE_WINDOW_RADIUS = 2;
 
 export default class JournalCommentPagination extends Component {
   static shouldRender(args) {
-    return (
-      args.post?.journal &&
-      args.post?.attachCommentPagination &&
-      args.post?.commentPageCount > 1
-    );
+    return args.post?.journal && args.post?.attachCommentPagination;
   }
-
-  @service modal;
 
   @tracked jumpPage = "";
 
@@ -76,42 +68,39 @@ export default class JournalCommentPagination extends Component {
     return this.currentPage < this.pageCount;
   }
 
+  get showPagingControls() {
+    return this.pageCount > 1;
+  }
+
+  get expanded() {
+    return this.args.post?.commentPaginationExpanded;
+  }
+
   get totalLabel() {
     return i18n("topic.comment.pagination.total", {
       total: this.args.post?.commentCount || 0,
     });
   }
 
+  get collapsedLabel() {
+    return i18n("topic.comment.pagination.expand", {
+      count: this.hiddenCommentCount,
+      total: this.args.post?.commentCount || 0,
+    });
+  }
+
+  get hiddenCommentCount() {
+    return Math.max(
+      (this.args.post?.commentCount || 0) -
+        (this.args.post?.commentPageEnd || 0),
+      0
+    );
+  }
+
   get entryId() {
     return this.args.post?.entry
       ? this.args.post.id
       : this.args.post?.entry_post_id;
-  }
-
-  get allPosts() {
-    return this.args.post?.topic?.postStream?.posts || [];
-  }
-
-  get entryPost() {
-    if (!this.entryId) {
-      return null;
-    }
-
-    return (
-      this.args.post?.topic?.postStream?.findLoadedPost?.(this.entryId) ||
-      this.allPosts.find((post) => post?.id === this.entryId) ||
-      null
-    );
-  }
-
-  get comments() {
-    if (!this.entryId) {
-      return [];
-    }
-
-    return this.allPosts.filter(
-      (post) => post?.comment && post.entry_post_id === this.entryId
-    );
   }
 
   @action
@@ -150,16 +139,17 @@ export default class JournalCommentPagination extends Component {
   }
 
   @action
-  openThreadModal(event) {
+  expand(event) {
     event?.preventDefault();
 
-    this.modal.show(JournalCommentThread, {
-      model: {
-        comments: this.comments,
-        entry: this.entryPost,
-        total: this.args.post?.commentCount || 0,
-      },
-    });
+    this.setExpanded(true);
+  }
+
+  @action
+  collapse(event) {
+    event?.preventDefault();
+
+    this.setExpanded(false);
   }
 
   setPage(page) {
@@ -181,95 +171,118 @@ export default class JournalCommentPagination extends Component {
     this.jumpPage = "";
   }
 
+  setExpanded(expanded) {
+    if (!this.entryId) {
+      return;
+    }
+
+    this.args.post?.topic?.postStream?.setJournalCommentPaginationExpanded?.(
+      this.entryId,
+      expanded
+    );
+  }
+
   <template>
     <nav
-      class="journal-comment-pagination"
+      class="journal-comment-pagination {{unless this.expanded "is-collapsed"}}"
       aria-label={{i18n "topic.comment.pagination.label"}}
     >
-      <span class="journal-comment-pagination__total">{{this.totalLabel}}</span>
+      {{#if this.expanded}}
+        <span class="journal-comment-pagination__total">{{this.totalLabel}}</span>
 
-      <div class="journal-comment-pagination__controls">
-        <button
-          type="button"
-          class="btn btn-small journal-comment-pagination__button"
-          disabled={{not this.hasPreviousPage}}
-          {{on "click" (fn this.goToPage 1)}}
-        >
-          {{i18n "topic.comment.pagination.first"}}
-        </button>
-
-        <button
-          type="button"
-          class="btn btn-small journal-comment-pagination__button"
-          disabled={{not this.hasPreviousPage}}
-          {{on "click" this.previousPage}}
-        >
-          {{i18n "topic.comment.pagination.previous"}}
-        </button>
-
-        {{#each this.pages as |item|}}
-          {{#if (eq item.type "ellipsis")}}
-            <span class="journal-comment-pagination__ellipsis" aria-hidden="true">
-              ...
-            </span>
-          {{else}}
+        {{#if this.showPagingControls}}
+          <div class="journal-comment-pagination__controls">
             <button
               type="button"
-              class="btn btn-small journal-comment-pagination__page {{if item.active "is-active"}}"
-              aria-current={{if item.active "page"}}
-              disabled={{item.active}}
-              {{on "click" (fn this.goToPage item.number)}}
+              class="btn btn-small journal-comment-pagination__button"
+              disabled={{not this.hasPreviousPage}}
+              {{on "click" (fn this.goToPage 1)}}
             >
-              {{item.number}}
+              {{i18n "topic.comment.pagination.first"}}
             </button>
-          {{/if}}
-        {{/each}}
+
+            <button
+              type="button"
+              class="btn btn-small journal-comment-pagination__button"
+              disabled={{not this.hasPreviousPage}}
+              {{on "click" this.previousPage}}
+            >
+              {{i18n "topic.comment.pagination.previous"}}
+            </button>
+
+            {{#each this.pages as |item|}}
+              {{#if (eq item.type "ellipsis")}}
+                <span class="journal-comment-pagination__ellipsis" aria-hidden="true">
+                  ...
+                </span>
+              {{else}}
+                <button
+                  type="button"
+                  class="btn btn-small journal-comment-pagination__page {{if item.active "is-active"}}"
+                  aria-current={{if item.active "page"}}
+                  disabled={{item.active}}
+                  {{on "click" (fn this.goToPage item.number)}}
+                >
+                  {{item.number}}
+                </button>
+              {{/if}}
+            {{/each}}
+
+            <button
+              type="button"
+              class="btn btn-small journal-comment-pagination__button"
+              disabled={{not this.hasNextPage}}
+              {{on "click" this.nextPage}}
+            >
+              {{i18n "topic.comment.pagination.next"}}
+            </button>
+
+            <button
+              type="button"
+              class="btn btn-small journal-comment-pagination__button"
+              disabled={{not this.hasNextPage}}
+              {{on "click" (fn this.goToPage this.pageCount)}}
+            >
+              {{i18n "topic.comment.pagination.last"}}
+            </button>
+          </div>
+
+          <form
+            class="journal-comment-pagination__jump"
+            {{on "submit" this.jumpToPage}}
+          >
+            <label>
+              {{i18n "topic.comment.pagination.jump_label"}}
+              <input
+                type="number"
+                min="1"
+                max={{this.pageCount}}
+                value={{this.jumpPage}}
+                {{on "input" this.updateJumpPage}}
+              />
+            </label>
+            <button type="submit" class="btn btn-small">
+              {{i18n "topic.comment.pagination.jump"}}
+            </button>
+          </form>
+        {{/if}}
 
         <button
           type="button"
-          class="btn btn-small journal-comment-pagination__button"
-          disabled={{not this.hasNextPage}}
-          {{on "click" this.nextPage}}
+          class="btn btn-small journal-comment-pagination__collapse"
+          {{on "click" this.collapse}}
         >
-          {{i18n "topic.comment.pagination.next"}}
+          {{i18n "topic.comment.pagination.collapse"}}
         </button>
-
+      {{else}}
         <button
           type="button"
-          class="btn btn-small journal-comment-pagination__button"
-          disabled={{not this.hasNextPage}}
-          {{on "click" (fn this.goToPage this.pageCount)}}
+          class="journal-comment-pagination__expand"
+          {{on "click" this.expand}}
         >
-          {{i18n "topic.comment.pagination.last"}}
+          {{this.collapsedLabel}}
         </button>
-      </div>
-
-      <form
-        class="journal-comment-pagination__jump"
-        {{on "submit" this.jumpToPage}}
-      >
-        <label>
-          {{i18n "topic.comment.pagination.jump_label"}}
-          <input
-            type="number"
-            min="1"
-            max={{this.pageCount}}
-            value={{this.jumpPage}}
-            {{on "input" this.updateJumpPage}}
-          />
-        </label>
-        <button type="submit" class="btn btn-small">
-          {{i18n "topic.comment.pagination.jump"}}
-        </button>
-      </form>
-
-      <button
-        type="button"
-        class="btn btn-small journal-comment-pagination__thread"
-        {{on "click" this.openThreadModal}}
-      >
-        {{i18n "topic.comment.pagination.view_thread"}}
-      </button>
+      {{/if}}
     </nav>
   </template>
 }

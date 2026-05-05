@@ -66,7 +66,6 @@ graph TD
 
     Components --> CommentBtn["journal-comment-button.gjs"]
     Components --> Pagination["journal-comment-pagination.gjs"]
-    Components --> ThreadModal["modal/journal-comment-thread.gjs"]
     Components --> TopicTip["journal-topic-tip.gjs"]
     Components --> GroupChooser["journal-group-chooser.js"]
 
@@ -134,8 +133,7 @@ npx ember-template-lint assets/javascripts
 | `initializers/journal-composer.js` | 编辑器标签/图标（区分条目和评论） |
 | `initializers/journal-discovery.js` | 分类发现页集成 |
 | `components/journal-comment-button.gjs` | 帖子上的评论/回复按钮 |
-| `components/journal-comment-pagination.gjs` | 日志评论分页控件，含首页/尾页/跳页/查看全部 |
-| `components/modal/journal-comment-thread.gjs` | 本帖与全部评论弹窗 |
+| `components/journal-comment-pagination.gjs` | 日志评论分页控件，默认轻量按钮，展开后显示首页/尾页/跳页 |
 
 **插件 ID 常量：** `PLUGIN_ID = "discourse-journal"`
 
@@ -166,7 +164,8 @@ topic.journal_post_map  # { post_id => [display_order, entry_post_id] }
 |--------|------|--------|------|
 | `journal_enabled` | boolean | true | 主开关 |
 | `journal_show_topic_tip` | boolean | true | 显示说明提示 |
-| `journal_comments_default` | integer | 3 | 每页显示的日志评论数 |
+| `journal_comments_default` | integer | 3 | 展开前默认显示的评论数 |
+| `journal_comments_expanded_per_page` | integer | 10 | 展开后每页显示的评论数；运行时不会小于 `journal_comments_default` |
 | `journal_entries_timeline` | boolean | - | 启用日志条目时间线 |
 
 ## 分类自定义字段

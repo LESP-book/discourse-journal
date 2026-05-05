@@ -8,3 +8,6 @@ plugins:
   journal_comments_default:
     default: 3
     client: true
+  journal_comments_expanded_per_page:
+    default: 10
+    client: true
