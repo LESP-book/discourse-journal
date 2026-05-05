@@ -97,7 +97,17 @@ en:
     topic:
       comment:
         pagination:
-          range: "Page %{page} / %{pages}, showing %{start}-%{end} of %{total} comments"
+          total: "共 %{total} 条评论"
+          first: "首页"
+          previous: "上一页"
+          next: "下一页"
+          last: "尾页"
+          jump_label: "跳到"
+          jump: "跳转"
+          view_thread: "查看全部"
+        thread:
+          title: "本帖与 %{count} 条评论"
+          close: "关闭"
 ```
 
 **server.*.yml** (后端):

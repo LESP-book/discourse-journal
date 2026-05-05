@@ -66,6 +66,7 @@ graph TD
 
     Components --> CommentBtn["journal-comment-button.gjs"]
     Components --> Pagination["journal-comment-pagination.gjs"]
+    Components --> ThreadModal["modal/journal-comment-thread.gjs"]
     Components --> TopicTip["journal-topic-tip.gjs"]
     Components --> GroupChooser["journal-group-chooser.js"]
 
@@ -133,7 +134,8 @@ npx ember-template-lint assets/javascripts
 | `initializers/journal-composer.js` | 编辑器标签/图标（区分条目和评论） |
 | `initializers/journal-discovery.js` | 分类发现页集成 |
 | `components/journal-comment-button.gjs` | 帖子上的评论/回复按钮 |
-| `components/journal-comment-pagination.gjs` | 日志评论分页控件 |
+| `components/journal-comment-pagination.gjs` | 日志评论分页控件，含首页/尾页/跳页/查看全部 |
+| `components/modal/journal-comment-thread.gjs` | 本帖与全部评论弹窗 |
 
 **插件 ID 常量：** `PLUGIN_ID = "discourse-journal"`
 

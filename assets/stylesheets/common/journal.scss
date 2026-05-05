@@ -210,7 +210,7 @@ div.topic-post {
   margin: 0.5em 0 1em;
 }
 
-.journal-comment-pagination__range {
+.journal-comment-pagination__total {
   color: var(--primary-medium);
   font-size: var(--font-down-1);
 }
@@ -221,9 +221,76 @@ div.topic-post {
   gap: 0.35em;
 }
 
+.journal-comment-pagination__ellipsis {
+  align-items: center;
+  color: var(--primary-medium);
+  display: inline-flex;
+  min-height: 30px;
+  padding: 0 0.25em;
+}
+
 .journal-comment-pagination__page.is-active {
   background: var(--tertiary);
   color: var(--secondary);
+}
+
+.journal-comment-pagination__jump {
+  align-items: center;
+  display: inline-flex;
+  gap: 0.35em;
+
+  label {
+    align-items: center;
+    color: var(--primary-medium);
+    display: inline-flex;
+    gap: 0.35em;
+    margin: 0;
+  }
+
+  input {
+    margin: 0;
+    max-width: 5em;
+  }
+}
+
+.journal-comment-pagination__thread {
+  white-space: nowrap;
+}
+
+.journal-comment-thread-modal {
+  .d-modal__container {
+    max-width: 860px;
+  }
+}
+
+.journal-comment-thread {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+  max-height: 70vh;
+  overflow: auto;
+}
+
+.journal-comment-thread__post {
+  border-bottom: 1px solid var(--primary-low);
+  padding-bottom: 1em;
+
+  &.is-entry {
+    border-bottom-color: var(--primary-medium);
+  }
+}
+
+.journal-comment-thread__post-header {
+  align-items: center;
+  color: var(--primary-medium);
+  display: flex;
+  gap: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.journal-comment-thread__username {
+  color: var(--primary);
+  font-weight: 700;
 }
 
 .journal-topic-tip {

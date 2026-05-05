@@ -207,7 +207,6 @@ function extendPostStreamModel(api, siteSettings) {
             this.insertCommentInStream(post);
             this._reorderStoredPost(post);
             this._rebuildJournalOrder();
-            this._showJournalCommentPageForPost(post);
           }
 
           this._applyJournalCommentState();
@@ -252,9 +251,6 @@ function extendPostStreamModel(api, siteSettings) {
           }
 
           this._rebuildJournalOrder();
-          if (post?.reply_to_post_number) {
-            this._showJournalCommentPageForPost(post);
-          }
           this._applyJournalCommentState();
 
           return result;
@@ -270,7 +266,6 @@ function extendPostStreamModel(api, siteSettings) {
             this.insertCommentInStream(post);
             this._reorderStoredPost(post);
             this._rebuildJournalOrder();
-            this._showJournalCommentPageForPost(post);
           }
 
           this._applyJournalCommentState();
