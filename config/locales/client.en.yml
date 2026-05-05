@@ -50,9 +50,11 @@ en:
       comment:
         title: '评论此帖'
         help: '仅仅对此帖子进行回复'
-        show_comments:
-          all: '展示 {{count}} 条评论'
-          more: '展示其余 {{count}} 条评论'
+        pagination:
+          label: '评论分页'
+          previous: '上一页'
+          next: '下一页'
+          range: '第 {{page}} / {{pages}} 页，显示 {{start}}-{{end}} / {{total}} 条评论'
       comment_reply:
         title: '回复'
         help: '回复该评论'

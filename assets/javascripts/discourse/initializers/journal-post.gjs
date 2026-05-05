@@ -1,6 +1,6 @@
 import { withPluginApi } from "discourse/lib/plugin-api";
 import JournalCommentButton from "../components/journal-comment-button";
-import JournalShowCommentsToggle from "../components/journal-show-comments-toggle";
+import JournalCommentPagination from "../components/journal-comment-pagination";
 
 const PLUGIN_ID = "discourse-journal";
 
@@ -35,8 +35,12 @@ function registerTrackedPostProperties(api) {
     "entry",
     "entry_post_id",
     "entry_post_ids",
-    "attachCommentToggle",
-    "hiddenComments"
+    "attachCommentPagination",
+    "commentPage",
+    "commentPageCount",
+    "commentPageStart",
+    "commentPageEnd",
+    "commentCount"
   );
 }
 
@@ -203,6 +207,7 @@ function extendPostStreamModel(api, siteSettings) {
             this.insertCommentInStream(post);
             this._reorderStoredPost(post);
             this._rebuildJournalOrder();
+            this._showJournalCommentPageForPost(post);
           }
 
           this._applyJournalCommentState();
@@ -220,6 +225,7 @@ function extendPostStreamModel(api, siteSettings) {
             this.insertCommentInStream(post);
             this._reorderStoredPost(post);
             this._rebuildJournalOrder();
+            this._showJournalCommentPageForPost(post);
           }
 
           this._applyJournalCommentState();
@@ -245,8 +251,11 @@ function extendPostStreamModel(api, siteSettings) {
             }
           }
 
-          this._applyJournalCommentState();
           this._rebuildJournalOrder();
+          if (post?.reply_to_post_number) {
+            this._showJournalCommentPageForPost(post);
+          }
+          this._applyJournalCommentState();
 
           return result;
         }
@@ -261,6 +270,7 @@ function extendPostStreamModel(api, siteSettings) {
             this.insertCommentInStream(post);
             this._reorderStoredPost(post);
             this._rebuildJournalOrder();
+            this._showJournalCommentPageForPost(post);
           }
 
           this._applyJournalCommentState();
@@ -268,19 +278,21 @@ function extendPostStreamModel(api, siteSettings) {
           return result;
         }
 
-        showAllJournalCommentsForEntry(entryPostId) {
+        setJournalCommentPage(entryPostId, page) {
           if (!this.journal || !entryPostId) {
             return;
           }
 
-          if (!this._journalShownEntryIds) {
-            this._journalShownEntryIds = new Set();
+          const pageNumber = Number(page);
+          if (!Number.isFinite(pageNumber) || pageNumber < 1) {
+            return;
           }
 
-          if (!this._journalShownEntryIds.has(entryPostId)) {
-            this._journalShownEntryIds.add(entryPostId);
-            this._applyJournalCommentState();
-          }
+          this._ensureJournalCommentPages().set(
+            entryPostId,
+            Math.floor(pageNumber)
+          );
+          this._applyJournalCommentState();
         }
 
         _applyJournalCommentState() {
@@ -293,62 +305,163 @@ function extendPostStreamModel(api, siteSettings) {
             return;
           }
 
-          const showAll = this._journalShownEntryIds || new Set();
-          const defaultComments =
-            Number(siteSettings.journal_comments_default) || 0;
+          const pageSize = this._journalCommentPageSize();
+          const commentGroups = new Map();
 
-          let commentCount = 0;
-          let lastVisibleIndex = null;
-
-          posts.forEach((post, index) => {
+          posts.forEach((post) => {
             if (!post) {
               return;
             }
 
             if (post.comment) {
-              commentCount += 1;
-
-              const showing =
-                showAll.has(post.entry_post_id) ||
-                commentCount <= defaultComments;
+              const entryId = this._entryIdForPost(post, posts);
 
               post.setProperties?.({
-                showComment: showing,
-                attachCommentToggle: false,
-                hiddenComments: 0,
+                showComment: false,
+                attachCommentPagination: false,
+                commentPage: 1,
+                commentPageCount: 1,
+                commentPageStart: 0,
+                commentPageEnd: 0,
+                commentCount: 0,
               });
 
-              if (showing) {
-                lastVisibleIndex = index;
+              if (!entryId) {
+                post.setProperties?.({
+                  showComment: true,
+                });
+                return;
               }
 
-              const nextPost = posts[index + 1];
-              const reachedBoundary =
-                !nextPost || nextPost.entry || !nextPost.comment;
-
-              if (
-                reachedBoundary &&
-                !showing &&
-                lastVisibleIndex !== null &&
-                posts[lastVisibleIndex]
-              ) {
-                const hiddenCount = commentCount - defaultComments;
-                if (hiddenCount > 0) {
-                  posts[lastVisibleIndex].setProperties?.({
-                    attachCommentToggle: true,
-                    hiddenComments: hiddenCount,
-                  });
-                }
+              if (!commentGroups.has(entryId)) {
+                commentGroups.set(entryId, []);
               }
+
+              commentGroups.get(entryId).push(post);
             } else {
-              commentCount = 0;
-              lastVisibleIndex = index;
               post.setProperties?.({
-                attachCommentToggle: false,
-                hiddenComments: 0,
+                attachCommentPagination: false,
+                commentPage: 1,
+                commentPageCount: 1,
+                commentPageStart: 0,
+                commentPageEnd: 0,
+                commentCount: 0,
               });
             }
           });
+
+          commentGroups.forEach((comments, entryId) => {
+            const commentCount = comments.length;
+
+            if (pageSize <= 0 || commentCount <= pageSize) {
+              comments.forEach((comment) => {
+                comment.setProperties?.({
+                  showComment: true,
+                  attachCommentPagination: false,
+                  commentPage: 1,
+                  commentPageCount: 1,
+                  commentPageStart: commentCount > 0 ? 1 : 0,
+                  commentPageEnd: commentCount,
+                  commentCount,
+                });
+              });
+              return;
+            }
+
+            const pageCount = Math.ceil(commentCount / pageSize);
+            const currentPage = this._currentJournalCommentPage(
+              entryId,
+              pageCount
+            );
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = Math.min(startIndex + pageSize, commentCount);
+            let paginationPost = null;
+
+            comments.forEach((comment, index) => {
+              const showComment = index >= startIndex && index < endIndex;
+
+              comment.setProperties?.({
+                showComment,
+                attachCommentPagination: false,
+                commentPage: currentPage,
+                commentPageCount: pageCount,
+                commentPageStart: startIndex + 1,
+                commentPageEnd: endIndex,
+                commentCount,
+              });
+
+              if (showComment) {
+                paginationPost = comment;
+              }
+            });
+
+            paginationPost?.setProperties?.({
+              attachCommentPagination: true,
+            });
+          });
+        }
+
+        _ensureJournalCommentPages() {
+          if (!this._journalCommentPages) {
+            this._journalCommentPages = new Map();
+          }
+
+          return this._journalCommentPages;
+        }
+
+        _journalCommentPageSize() {
+          return Number(siteSettings.journal_comments_default) || 0;
+        }
+
+        _currentJournalCommentPage(entryPostId, pageCount) {
+          const pageMap = this._ensureJournalCommentPages();
+          const savedPage = pageMap.get(entryPostId) || 1;
+          const currentPage = Math.min(Math.max(savedPage, 1), pageCount);
+
+          if (currentPage !== savedPage) {
+            pageMap.set(entryPostId, currentPage);
+          }
+
+          return currentPage;
+        }
+
+        _showJournalCommentPageForPost(post) {
+          if (!post?.reply_to_post_number) {
+            return;
+          }
+
+          const pageSize = this._journalCommentPageSize();
+          if (pageSize <= 0) {
+            return;
+          }
+
+          const posts = this.posts || [];
+          const entryId = this._entryIdForPost(post, posts);
+          if (!entryId) {
+            return;
+          }
+
+          const comments = posts.filter(
+            (candidate) =>
+              candidate?.comment &&
+              this._entryIdForPost(candidate, posts) === entryId
+          );
+          const commentIndex = comments.findIndex(
+            (candidate) =>
+              candidate === post ||
+              (post.id && candidate?.id === post.id) ||
+              (post.post_number &&
+                candidate?.post_number === post.post_number)
+          );
+
+          if (commentIndex === -1) {
+            return;
+          }
+
+          this._ensureJournalCommentPages().set(
+            entryId,
+            Math.floor(commentIndex / pageSize) + 1
+          );
         }
 
         _reorderStoredPost(post) {
@@ -549,28 +662,14 @@ function registerGlimmerMetaDataTransformer(api) {
   );
 }
 
-function registerShowCommentsOutlet(api) {
-  api.renderAfterWrapperOutlet("post-links", JournalShowCommentsToggle);
-}
-
-function registerComposerHooks(api) {
-  api.onAppEvent("composer:opened", () => {
-    const composer = api.container.lookup("service:composer");
-    const composerPost = composer?.model?.post;
-
-    if (composerPost?.entry) {
-      composerPost.topic?.postStream?.showAllJournalCommentsForEntry?.(
-        composerPost.id
-      );
-    }
-  });
+function registerCommentPaginationOutlet(api) {
+  api.renderAfterWrapperOutlet("post-links", JournalCommentPagination);
 }
 
 function setupGlimmerPostStream(api) {
   registerGlimmerAvatarTransformer(api);
   registerGlimmerMetaDataTransformer(api);
-  registerShowCommentsOutlet(api);
-  registerComposerHooks(api);
+  registerCommentPaginationOutlet(api);
 }
 
 export default {

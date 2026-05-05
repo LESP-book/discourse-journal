@@ -202,13 +202,28 @@ div.topic-post {
   }
 }
 
-.show-comments {
-  margin-bottom: 10px;
-  display: inline-block;
+.journal-comment-pagination {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em;
+  margin: 0.5em 0 1em;
 }
 
-.entry .show-comments {
-  padding-left: 105px;
+.journal-comment-pagination__range {
+  color: var(--primary-medium);
+  font-size: var(--font-down-1);
+}
+
+.journal-comment-pagination__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35em;
+}
+
+.journal-comment-pagination__page.is-active {
+  background: var(--tertiary);
+  color: var(--secondary);
 }
 
 .journal-topic-tip {

@@ -65,7 +65,7 @@ graph TD
     Initializers --> JournalDiscovery["journal-discovery.js"]
 
     Components --> CommentBtn["journal-comment-button.gjs"]
-    Components --> ToggleBtn["journal-show-comments-toggle.gjs"]
+    Components --> Pagination["journal-comment-pagination.gjs"]
     Components --> TopicTip["journal-topic-tip.gjs"]
     Components --> GroupChooser["journal-group-chooser.js"]
 
@@ -133,7 +133,7 @@ npx ember-template-lint assets/javascripts
 | `initializers/journal-composer.js` | 编辑器标签/图标（区分条目和评论） |
 | `initializers/journal-discovery.js` | 分类发现页集成 |
 | `components/journal-comment-button.gjs` | 帖子上的评论/回复按钮 |
-| `components/journal-show-comments-toggle.gjs` | "显示 X 条评论"切换按钮 |
+| `components/journal-comment-pagination.gjs` | 日志评论分页控件 |
 
 **插件 ID 常量：** `PLUGIN_ID = "discourse-journal"`
 
@@ -164,7 +164,7 @@ topic.journal_post_map  # { post_id => [display_order, entry_post_id] }
 |--------|------|--------|------|
 | `journal_enabled` | boolean | true | 主开关 |
 | `journal_show_topic_tip` | boolean | true | 显示说明提示 |
-| `journal_comments_default` | integer | 3 | 每个条目默认显示的评论数 |
+| `journal_comments_default` | integer | 3 | 每页显示的日志评论数 |
 | `journal_entries_timeline` | boolean | - | 启用日志条目时间线 |
 
 ## 分类自定义字段

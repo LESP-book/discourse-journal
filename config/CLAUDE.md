@@ -38,7 +38,7 @@
 |--------|------|--------|--------|------|
 | `journal_enabled` | bool | true | true | 启用日志插件 |
 | `journal_show_topic_tip` | bool | true | true | 在日志话题标题下显示提示 |
-| `journal_comments_default` | integer | 3 | true | 每个条目默认显示的评论数 |
+| `journal_comments_default` | integer | 3 | true | 每页显示的日志评论数 |
 | `journal_entries_timeline` | bool | false | true | 启用日志条目时间线 |
 
 ### 访问方式
@@ -94,9 +94,10 @@ en:
         journal:
           title: "This is a journal"
           details: "Only the author can add entries..."
-    journal:
-      comment: "Comment"
-      show_comments: "Show %{count} comments"
+    topic:
+      comment:
+        pagination:
+          range: "Page %{page} / %{pages}, showing %{start}-%{end} of %{total} comments"
 ```
 
 **server.*.yml** (后端):
@@ -105,7 +106,7 @@ en:
   site_settings:
     journal_enabled: "Enable journal plugin."
     journal_show_topic_tip: "Show a tip about journals..."
-    journal_comments_default: "Maximum number of comments..."
+    journal_comments_default: "Number of journal comments to display per page."
 ```
 
 ### 添加新翻译
