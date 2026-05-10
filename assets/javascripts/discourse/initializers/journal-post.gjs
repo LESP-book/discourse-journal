@@ -174,27 +174,35 @@ function extendPostStreamModel(api, siteSettings) {
           return null;
         }
 
-        insertCommentInStream(post) {
+        insertCommentInStream(post, { insertMissing = false } = {}) {
           const stream = this.stream;
-          const postId = post.id;
+          const postId = post?.id;
           const commentIndex = this.getCommentIndex(post);
 
-          if (stream.indexOf(postId) > -1 && commentIndex !== null) {
-            if (
-              typeof stream.removeObject === "function" &&
-              typeof stream.insertAt === "function"
-            ) {
+          if (!stream || !postId || commentIndex === null) {
+            return;
+          }
+
+          const currentIndex = stream.indexOf(postId);
+          if (currentIndex === -1 && !insertMissing) {
+            return;
+          }
+
+          if (
+            typeof stream.removeObject === "function" &&
+            typeof stream.insertAt === "function"
+          ) {
+            if (currentIndex > -1) {
               stream.removeObject(postId);
-              const targetIndex = Math.min(commentIndex, stream.length);
-              stream.insertAt(targetIndex, postId);
-            } else {
-              const currentIndex = stream.indexOf(postId);
-              if (currentIndex > -1) {
-                stream.splice(currentIndex, 1);
-              }
-              const targetIndex = Math.min(commentIndex, stream.length);
-              stream.splice(targetIndex, 0, postId);
             }
+            const targetIndex = Math.min(commentIndex, stream.length);
+            stream.insertAt(targetIndex, postId);
+          } else {
+            if (currentIndex > -1) {
+              stream.splice(currentIndex, 1);
+            }
+            const targetIndex = Math.min(commentIndex, stream.length);
+            stream.splice(targetIndex, 0, postId);
           }
         }
 
@@ -221,16 +229,62 @@ function extendPostStreamModel(api, siteSettings) {
             return result;
           }
 
+          const loadedCommittedPost =
+            this._ensureCommittedJournalPostLoaded(post);
+
           if (post?.reply_to_post_number) {
             this.insertCommentInStream(post);
             this._reorderStoredPost(post);
             this._rebuildJournalOrder();
             this._showJournalCommentPageForPost(post);
+          } else if (loadedCommittedPost) {
+            this._rebuildJournalOrder();
           }
 
           this._applyJournalCommentState();
 
           return result;
+        }
+
+        _ensureCommittedJournalPostLoaded(post) {
+          if (!post?.id || post.id === -1 || !this.posts || !this.stream) {
+            return false;
+          }
+
+          const postTopicId = post.topic_id ?? post.topic?.id;
+          if (this.topic?.id && postTopicId && this.topic.id !== postTopicId) {
+            return false;
+          }
+
+          if (post.reply_to_post_number && this.getCommentIndex(post) === null) {
+            return false;
+          }
+
+          const stored = this._findStoredPost(post);
+          const alreadyLoaded = stored && this.posts.includes(stored);
+          let changed = false;
+
+          if (!alreadyLoaded) {
+            super.appendPost(post);
+            changed = true;
+          }
+
+          if (post.reply_to_post_number) {
+            const previousIndex = this.stream.indexOf(post.id);
+            const previousLength = this.stream.length;
+
+            this.insertCommentInStream(post, { insertMissing: true });
+
+            changed =
+              changed ||
+              previousIndex !== this.stream.indexOf(post.id) ||
+              previousLength !== this.stream.length;
+          } else if (!this.stream.includes(post.id)) {
+            this.stream.push(post.id);
+            changed = true;
+          }
+
+          return changed;
         }
 
         prependPost(post, ...args) {
@@ -508,6 +562,7 @@ function extendPostStreamModel(api, siteSettings) {
             entryId,
             Math.floor(commentIndex / pageSize) + 1
           );
+          this._ensureJournalExpandedCommentPaginators().add(entryId);
         }
 
         _reorderStoredPost(post) {
