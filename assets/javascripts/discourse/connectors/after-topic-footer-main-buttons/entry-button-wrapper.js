@@ -1,10 +1,9 @@
-import { getOwner } from "@ember/application";
+import { action } from "@ember/object";
+import { getOwner } from "@ember/owner";
 
 export default {
-  actions: {
-    createEntry() {
-      const controller = getOwner(this).lookup("controller:topic");
-      controller.send("replyToPost");
-    },
-  },
+  createEntry: action(function () {
+    const controller = getOwner(this).lookup("controller:topic");
+    controller.send("replyToPost");
+  }),
 };

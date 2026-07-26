@@ -188,22 +188,11 @@ function extendPostStreamModel(api, siteSettings) {
             return;
           }
 
-          if (
-            typeof stream.removeObject === "function" &&
-            typeof stream.insertAt === "function"
-          ) {
-            if (currentIndex > -1) {
-              stream.removeObject(postId);
-            }
-            const targetIndex = Math.min(commentIndex, stream.length);
-            stream.insertAt(targetIndex, postId);
-          } else {
-            if (currentIndex > -1) {
-              stream.splice(currentIndex, 1);
-            }
-            const targetIndex = Math.min(commentIndex, stream.length);
-            stream.splice(targetIndex, 0, postId);
+          if (currentIndex > -1) {
+            stream.splice(currentIndex, 1);
           }
+          const targetIndex = Math.min(commentIndex, stream.length);
+          stream.splice(targetIndex, 0, postId);
         }
 
         stagePost(post, ...args) {
@@ -593,25 +582,13 @@ function extendPostStreamModel(api, siteSettings) {
         _moveStoredPost(stored, targetIndex) {
           const posts = this.posts;
 
-          if (
-            typeof posts.removeObject === "function" &&
-            typeof posts.insertAt === "function"
-          ) {
-            const currentIndex = posts.indexOf(stored);
-            if (currentIndex !== -1 && currentIndex !== targetIndex) {
-              posts.removeObject(stored);
-              const safeTargetIndex = Math.min(targetIndex, posts.length);
-              posts.insertAt(safeTargetIndex, stored);
-            }
-          } else {
-            const currentIndex = posts.indexOf(stored);
-            if (currentIndex === -1 || currentIndex === targetIndex) {
-              return;
-            }
-            const [item] = posts.splice(currentIndex, 1);
-            const safeTargetIndex = Math.min(targetIndex, posts.length);
-            posts.splice(safeTargetIndex, 0, item);
+          const currentIndex = posts.indexOf(stored);
+          if (currentIndex === -1 || currentIndex === targetIndex) {
+            return;
           }
+          const [item] = posts.splice(currentIndex, 1);
+          const safeTargetIndex = Math.min(targetIndex, posts.length);
+          posts.splice(safeTargetIndex, 0, item);
         }
 
         updateFromJson(...args) {
@@ -678,12 +655,7 @@ function extendPostStreamModel(api, siteSettings) {
             return;
           }
 
-          if (typeof posts.setObjects === "function") {
-            posts.setObjects(orderedPosts);
-          } else {
-            posts.length = 0;
-            orderedPosts.forEach((p) => posts.push(p));
-          }
+          posts.splice(0, posts.length, ...orderedPosts);
 
           const stream = this.stream;
           const orderedIds = orderedPosts.map((p) => p?.id).filter(Boolean);
@@ -712,11 +684,7 @@ function extendPostStreamModel(api, siteSettings) {
             return;
           }
 
-          if (typeof stream.setObjects === "function") {
-            stream.setObjects(newStream);
-          } else {
-            stream.splice(0, stream.length, ...newStream);
-          }
+          stream.splice(0, stream.length, ...newStream);
         }
       }
   );
