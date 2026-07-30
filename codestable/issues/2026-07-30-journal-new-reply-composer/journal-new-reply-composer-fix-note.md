@@ -44,3 +44,7 @@ tags: [journal, composer, reply-button]
 ## 6. 遗留事项
 
 补齐本地 Ruby 依赖并启动 Discourse 后，需在日志话题中点击“新回复”，确认编辑器出现；同时确认普通话题的核心“回复”按钮行为不受影响。
+
+## 7. 后续弃用迁移（2026-07-31）
+
+上一版恢复的 `{{action "createEntry"}}` 虽然解决了按钮无响应问题，但触发了 Ember 的 `discourse.template-action` 弃用提示。现已将 connector 迁移为 `entry-button-wrapper.gjs`，使用 `@action` 方法和 `@action={{this.createEntry}}`，删除旧的 `.js` 与 `.hbs` 文件。
