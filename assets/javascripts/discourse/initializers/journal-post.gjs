@@ -1,6 +1,6 @@
 import { withPluginApi } from "discourse/lib/plugin-api";
 import JournalCommentButton from "../components/journal-comment-button";
-import JournalShowCommentsToggle from "../components/journal-show-comments-toggle";
+import JournalCommentPagination from "../components/journal-comment-pagination";
 
 function registerPostMenuButtons(api) {
   api.registerValueTransformer(
@@ -19,9 +19,7 @@ function registerPostMenuButtons(api) {
         dag.delete(buttonKeys.REPLY);
       }
 
-      if (post.comment) {
-        dag.delete(buttonKeys.REPLIES);
-      }
+      dag.delete(buttonKeys.REPLIES);
     }
   );
 }
@@ -35,8 +33,13 @@ function registerTrackedPostProperties(api) {
     "entry",
     "entry_post_id",
     "entry_post_ids",
-    "attachCommentToggle",
-    "hiddenComments"
+    "attachCommentPagination",
+    "commentPage",
+    "commentPageCount",
+    "commentPageStart",
+    "commentPageEnd",
+    "commentCount",
+    "commentPaginationExpanded"
   );
 }
 
@@ -44,14 +47,14 @@ function registerPostClasses(api) {
   api.addPostClassesCallback((attrs) => {
     if (attrs.journal && !attrs.firstPost) {
       if (attrs.comment) {
-        let classes = ["comment"];
+        const classes = ["comment"];
         if (attrs.showComment) {
           classes.push("show");
         }
         return classes;
-      } else {
-        return ["entry"];
       }
+
+      return ["entry"];
     }
   });
 }
@@ -73,35 +76,33 @@ function registerGlimmerMetaDataTransformer(api) {
   api.registerValueTransformer(
     "post-meta-data-infos",
     ({ value: metadata, context: { post, metaDataInfoKeys } }) => {
-      if (post?.journal && post.entry) {
+      if (!post?.journal) {
+        return;
+      }
+
+      if (post.entry) {
         metadata.delete(metaDataInfoKeys.REPLY_TO_TAB);
+      } else if (post.comment) {
+        const postStream = post.topic?.postStream;
+        if (postStream && post.entry_post_id) {
+          const entry = postStream.findLoadedPost(post.entry_post_id);
+          if (entry && post.reply_to_post_number === entry.post_number) {
+            metadata.delete(metaDataInfoKeys.REPLY_TO_TAB);
+          }
+        }
       }
     }
   );
 }
 
-function registerShowCommentsOutlet(api) {
-  api.renderAfterWrapperOutlet("post-links", JournalShowCommentsToggle);
-}
-
-function registerComposerHooks(api) {
-  api.onAppEvent("composer:opened", () => {
-    const composer = api.container.lookup("service:composer");
-    const composerPost = composer?.model?.post;
-
-    if (composerPost?.entry) {
-      composerPost.topic?.postStream?.showAllJournalCommentsForEntry?.(
-        composerPost.id
-      );
-    }
-  });
+function registerCommentPaginationOutlet(api) {
+  api.renderAfterWrapperOutlet("post-links", JournalCommentPagination);
 }
 
 function setupGlimmerPostStream(api) {
   registerGlimmerAvatarTransformer(api);
   registerGlimmerMetaDataTransformer(api);
-  registerShowCommentsOutlet(api);
-  registerComposerHooks(api);
+  registerCommentPaginationOutlet(api);
 }
 
 export default {

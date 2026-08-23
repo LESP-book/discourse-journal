@@ -1,37 +1,63 @@
+import { applyJournalCommentState } from "./journal-comment-pagination";
+import { entryIdForPost } from "./journal-post-relations";
+
 export function getCommentIndex(postStream, post) {
   const posts = postStream.posts || [];
-  let passed = false;
-  let commentIndex = null;
+  const entryId = entryIdForPost(post, posts);
 
-  posts.some((candidate, index) => {
-    if (passed && !candidate.reply_to_post_number) {
-      commentIndex = index;
-      return true;
+  if (!entryId) {
+    return null;
+  }
+
+  const entryIndex = posts.findIndex((candidate) => candidate?.id === entryId);
+  if (entryIndex === -1) {
+    return null;
+  }
+
+  let commentIndex = entryIndex + 1;
+
+  for (let index = entryIndex + 1; index < posts.length; index++) {
+    const current = posts[index];
+    if (!current) {
+      continue;
     }
 
-    if (
-      candidate.post_number === post.reply_to_post_number &&
-      index < posts.length - 1
-    ) {
-      passed = true;
+    if (entryIdForPost(current, posts) === entryId) {
+      commentIndex = index + 1;
+      continue;
     }
 
-    return false;
-  });
+    if (!current.reply_to_post_number) {
+      break;
+    }
+  }
 
   return commentIndex;
 }
 
-export function insertCommentInStream(postStream, post) {
+export function insertCommentInStream(
+  postStream,
+  post,
+  { insertMissing = false } = {}
+) {
   const stream = postStream.stream;
-  const postId = post.id;
-  const commentIndex = getCommentIndex(postStream, post) - 1;
+  const postId = post?.id;
+  const commentIndex = getCommentIndex(postStream, post);
 
-  if (stream.indexOf(postId) > -1 && commentIndex && commentIndex > 0) {
-    const currentIndex = stream.indexOf(postId);
-    stream.splice(currentIndex, 1);
-    stream.splice(commentIndex, 0, postId);
+  if (!stream || !postId || commentIndex === null) {
+    return;
   }
+
+  const currentIndex = stream.indexOf(postId);
+  if (currentIndex === -1 && !insertMissing) {
+    return;
+  }
+
+  if (currentIndex > -1) {
+    stream.splice(currentIndex, 1);
+  }
+
+  stream.splice(Math.min(commentIndex, stream.length), 0, postId);
 }
 
 export function findStoredPost(postStream, post) {
@@ -55,78 +81,85 @@ export function moveStoredPost(postStream, stored, targetIndex) {
   }
 
   const [item] = posts.splice(currentIndex, 1);
-  posts.splice(targetIndex, 0, item);
+  posts.splice(Math.min(targetIndex, posts.length), 0, item);
 }
 
 export function reorderStoredPost(postStream, post) {
   const stored = findStoredPost(postStream, post);
-  if (!stored) {
-    return;
-  }
-
   const commentIndex = getCommentIndex(postStream, stored);
-  if (commentIndex && commentIndex > 0) {
+
+  if (stored && commentIndex !== null) {
     moveStoredPost(postStream, stored, commentIndex);
   }
 }
 
-export function applyJournalCommentState(postStream, siteSettings) {
+export function rebuildJournalOrder(postStream) {
   if (!postStream.journal || !postStream.posts?.length) {
     return;
   }
 
-  const defaultComments = Number(siteSettings.journal_comments_default) || 0;
-  let commentCount = 0;
-  let lastVisibleIndex = null;
+  const posts = postStream.posts;
+  const snapshot = posts.slice();
+  const entryIds =
+    postStream.topic?.entry_post_ids?.length > 0
+      ? postStream.topic.entry_post_ids
+      : snapshot.filter((post) => post?.entry).map((post) => post.id);
+  const orderedPosts = [];
+  const seen = new Set();
 
-  postStream.posts.forEach((post, index) => {
-    if (!post) {
-      return;
+  entryIds.forEach((entryId) => {
+    const entry = snapshot.find((post) => post?.id === entryId);
+    if (entry) {
+      orderedPosts.push(entry);
+      seen.add(entry.id);
     }
 
-    if (post.comment) {
-      commentCount += 1;
-
-      const showing =
-        postStream._journalShownEntryIds.has(post.entry_post_id) ||
-        commentCount <= defaultComments;
-
-      post.setProperties?.({
-        showComment: showing,
-        attachCommentToggle: false,
-        hiddenComments: 0,
-      });
-
-      if (showing) {
-        lastVisibleIndex = index;
-      }
-
-      const nextPost = postStream.posts[index + 1];
-      const reachedBoundary = !nextPost || nextPost.entry || !nextPost.comment;
-
-      if (
-        reachedBoundary &&
-        !showing &&
-        lastVisibleIndex !== null &&
-        postStream.posts[lastVisibleIndex]
-      ) {
-        const hiddenCount = commentCount - defaultComments;
-        if (hiddenCount > 0) {
-          postStream.posts[lastVisibleIndex].setProperties?.({
-            attachCommentToggle: true,
-            hiddenComments: hiddenCount,
-          });
+    snapshot
+      .filter(
+        (post) =>
+          !post?.entry && entryIdForPost(post, snapshot) === entryId
+      )
+      .sort((a, b) => (a.post_number || 0) - (b.post_number || 0))
+      .forEach((comment) => {
+        if (!seen.has(comment.id)) {
+          orderedPosts.push(comment);
+          seen.add(comment.id);
         }
-      }
-    } else {
-      commentCount = 0;
-      lastVisibleIndex = index;
-      post.setProperties?.({
-        attachCommentToggle: false,
-        hiddenComments: 0,
       });
+  });
+
+  snapshot.forEach((post) => {
+    if (post?.id && !seen.has(post.id)) {
+      orderedPosts.push(post);
+      seen.add(post.id);
     }
   });
+
+  if (orderedPosts.length !== posts.length) {
+    return;
+  }
+
+  posts.splice(0, posts.length, ...orderedPosts);
+
+  const stream = postStream.stream;
+  const orderedIds = orderedPosts.map((post) => post.id).filter(Boolean);
+  if (!stream?.length || !orderedIds.length) {
+    return;
+  }
+
+  const orderedIdSet = new Set(orderedIds);
+  if (stream.filter((id) => orderedIdSet.has(id)).length !== orderedIds.length) {
+    return;
+  }
+
+  const replacementQueue = [...orderedIds];
+  stream.splice(
+    0,
+    stream.length,
+    ...stream.map((id) =>
+      orderedIdSet.has(id) ? (replacementQueue.shift() ?? id) : id
+    )
+  );
 }
 
 export function afterPostMutation(postStream, post, siteSettings) {
@@ -139,5 +172,6 @@ export function afterPostMutation(postStream, post, siteSettings) {
     reorderStoredPost(postStream, post);
   }
 
+  rebuildJournalOrder(postStream);
   applyJournalCommentState(postStream, siteSettings);
 }

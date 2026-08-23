@@ -2,5 +2,6 @@ en:
   site_settings:
     journal_enabled: "Enable journal plugin."
     journal_show_topic_tip: "Show a tip about journals under journal topic titles."
-    journal_comments_default: "Maximum number of comments to display on journal entries by default."
+    journal_comments_default: "Number of journal comments to display before expanding pagination."
+    journal_comments_expanded_per_page: "Number of journal comments to display per page after expanding. If this is lower than the default display count, the default display count is used instead."
     journal_entries_timeline: "Enable journal entries timeline."

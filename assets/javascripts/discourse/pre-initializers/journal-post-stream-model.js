@@ -1,8 +1,15 @@
 import { withPluginApi } from "discourse/lib/plugin-api";
 import {
-  afterPostMutation,
   applyJournalCommentState,
+  setJournalCommentPage,
+  setJournalCommentPaginationExpanded,
+  showJournalCommentPageForPost,
+} from "../lib/journal-comment-pagination";
+import {
+  afterPostMutation,
   findStoredPost,
+  getCommentIndex,
+  insertCommentInStream,
   moveStoredPost,
 } from "../lib/journal-post-stream";
 
@@ -16,7 +23,12 @@ export function registerPostStreamExtensions(api, siteSettings) {
     updateFromJson: PostStream.prototype.updateFromJson,
   };
 
-  api.addModelField("post-stream", "_journalShownEntryIds", { type: "set" });
+  api.addModelField("post-stream", "_journalCommentPages", {
+    type: "object",
+  });
+  api.addModelField("post-stream", "_journalExpandedCommentPaginators", {
+    type: "set",
+  });
 
   api.addModelGetter("post-stream", "journal", function () {
     return this.topic?.journal;
@@ -24,16 +36,22 @@ export function registerPostStreamExtensions(api, siteSettings) {
 
   api.addModelMethod(
     "post-stream",
-    "showAllJournalCommentsForEntry",
-    function (entryPostId) {
-      if (!this.journal || !entryPostId) {
-        return;
-      }
+    "setJournalCommentPage",
+    function (entryPostId, page) {
+      setJournalCommentPage(this, entryPostId, page, siteSettings);
+    }
+  );
 
-      if (!this._journalShownEntryIds.has(entryPostId)) {
-        this._journalShownEntryIds.add(entryPostId);
-        applyJournalCommentState(this, siteSettings);
-      }
+  api.addModelMethod(
+    "post-stream",
+    "setJournalCommentPaginationExpanded",
+    function (entryPostId, expanded) {
+      setJournalCommentPaginationExpanded(
+        this,
+        entryPostId,
+        expanded,
+        siteSettings
+      );
     }
   );
 
@@ -45,7 +63,26 @@ export function registerPostStreamExtensions(api, siteSettings) {
 
   api.addModelMethod("post-stream", "commitPost", function (post, ...args) {
     const result = coreMethods.commitPost.call(this, post, ...args);
-    afterPostMutation(this, post, siteSettings);
+
+    if (!this.journal) {
+      return result;
+    }
+
+    const loadedCommittedPost = ensureCommittedJournalPostLoaded(
+      this,
+      post,
+      coreMethods.appendPost
+    );
+
+    if (post?.reply_to_post_number) {
+      showJournalCommentPageForPost(this, post, siteSettings);
+      afterPostMutation(this, post, siteSettings);
+    } else if (loadedCommittedPost) {
+      afterPostMutation(this, post, siteSettings);
+    } else {
+      applyJournalCommentState(this, siteSettings);
+    }
+
     return result;
   });
 
@@ -66,7 +103,7 @@ export function registerPostStreamExtensions(api, siteSettings) {
       }
     }
 
-    applyJournalCommentState(this, siteSettings);
+    afterPostMutation(this, post, siteSettings);
     return result;
   });
 
@@ -78,9 +115,49 @@ export function registerPostStreamExtensions(api, siteSettings) {
 
   api.addModelMethod("post-stream", "updateFromJson", function (...args) {
     const result = coreMethods.updateFromJson.apply(this, args);
-    applyJournalCommentState(this, siteSettings);
+    afterPostMutation(this, null, siteSettings);
     return result;
   });
+}
+
+function ensureCommittedJournalPostLoaded(postStream, post, appendPost) {
+  if (!post?.id || post.id === -1 || !postStream.posts || !postStream.stream) {
+    return false;
+  }
+
+  const postTopicId = post.topic_id ?? post.topic?.id;
+  if (postStream.topic?.id && postTopicId && postStream.topic.id !== postTopicId) {
+    return false;
+  }
+
+  if (post.reply_to_post_number && getCommentIndex(postStream, post) === null) {
+    return false;
+  }
+
+  const stored = findStoredPost(postStream, post);
+  const alreadyLoaded = stored && postStream.posts.includes(stored);
+  let changed = false;
+
+  if (!alreadyLoaded) {
+    appendPost.call(postStream, post);
+    changed = true;
+  }
+
+  if (post.reply_to_post_number) {
+    const previousIndex = postStream.stream.indexOf(post.id);
+    const previousLength = postStream.stream.length;
+    insertCommentInStream(postStream, post, { insertMissing: true });
+
+    changed =
+      changed ||
+      previousIndex !== postStream.stream.indexOf(post.id) ||
+      previousLength !== postStream.stream.length;
+  } else if (!postStream.stream.includes(post.id)) {
+    postStream.stream.push(post.id);
+    changed = true;
+  }
+
+  return changed;
 }
 
 export default {

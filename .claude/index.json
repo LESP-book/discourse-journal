@@ -1,0 +1,190 @@
+{
+  "timestamp": "2026-01-23T18:35:00+08:00",
+  "lastUpdated": "2026-01-23T18:35:00+08:00",
+  "plugin": {
+    "name": "discourse-journal",
+    "version": "0.3.0",
+    "authors": ["Angus McLeod"],
+    "url": "https://github.com/paviliondev/discourse-journal",
+    "license": "GPL-2.0"
+  },
+  "modules": [
+    {
+      "path": "/",
+      "name": "Root",
+      "description": "Plugin entry point and core registration",
+      "entry": "plugin.rb",
+      "language": "Ruby",
+      "hasTests": false,
+      "hasCLAUDE": true
+    },
+    {
+      "path": "extensions",
+      "name": "Extensions",
+      "description": "Core Discourse class extensions (Guardian, Topic, PostCreator, CategoryCustomField)",
+      "entries": ["guardian.rb", "topic.rb", "post_creator.rb", "category_custom_field.rb"],
+      "language": "Ruby",
+      "hasTests": false,
+      "hasCLAUDE": true
+    },
+    {
+      "path": "app/controllers/discourse_journal",
+      "name": "Controllers",
+      "description": "Admin API controller for journal management",
+      "entries": ["journal_controller.rb"],
+      "language": "Ruby",
+      "hasTests": false,
+      "hasCLAUDE": false
+    },
+    {
+      "path": "jobs",
+      "name": "Jobs",
+      "description": "Background jobs for sort order updates",
+      "entries": ["update_journal_category_sort_order.rb"],
+      "language": "Ruby",
+      "hasTests": false,
+      "hasCLAUDE": true
+    },
+    {
+      "path": "lib/journal",
+      "name": "Engine",
+      "description": "Rails Engine configuration",
+      "entries": ["engine.rb"],
+      "language": "Ruby",
+      "hasTests": false,
+      "hasCLAUDE": false
+    },
+    {
+      "path": "assets/javascripts/discourse",
+      "name": "Frontend",
+      "description": "Ember.js frontend: components, initializers, connectors",
+      "language": "JavaScript/Glimmer",
+      "hasTests": false,
+      "hasCLAUDE": true,
+      "submodules": [
+        {
+          "path": "assets/javascripts/discourse/components",
+          "name": "Components",
+          "description": "Reusable UI components (comment button, toggle, tip, group chooser)",
+          "files": ["journal-comment-button.gjs", "journal-show-comments-toggle.gjs", "journal-topic-tip.gjs", "journal-group-chooser.js"]
+        },
+        {
+          "path": "assets/javascripts/discourse/initializers",
+          "name": "Initializers",
+          "description": "Plugin initialization and Discourse model/route modifications",
+          "files": ["journal-post.gjs", "journal-topic.js", "journal-composer.js", "journal-discovery.js"]
+        },
+        {
+          "path": "assets/javascripts/discourse/connectors",
+          "name": "Connectors",
+          "description": "Outlet connectors for Discourse UI integration",
+          "subpaths": ["after-topic-footer-main-buttons", "category-custom-settings", "topic-category"]
+        }
+      ]
+    },
+    {
+      "path": "assets/stylesheets",
+      "name": "Styles",
+      "description": "SCSS stylesheets for common, desktop, and mobile",
+      "language": "SCSS",
+      "hasTests": false,
+      "hasCLAUDE": false,
+      "files": ["common/journal.scss", "desktop/journal.scss", "mobile/journal.scss"]
+    },
+    {
+      "path": "config",
+      "name": "Configuration",
+      "description": "Plugin settings, routes, and localization",
+      "language": "Ruby/YAML",
+      "hasTests": false,
+      "hasCLAUDE": true,
+      "files": ["settings.yml", "routes.rb"],
+      "locales": {
+        "count": 72,
+        "primaryLanguage": "en"
+      }
+    }
+  ],
+  "coverage": {
+    "totalFiles": 29,
+    "scannedFiles": 29,
+    "percentage": 100,
+    "ignoredPatterns": ["node_modules", ".git", "gems", "auto_generated", "config/locales/*.yml (except en)"],
+    "truncated": false,
+    "claudeMdFiles": {
+      "root": "CLAUDE.md",
+      "modules": [
+        "extensions/CLAUDE.md",
+        "jobs/CLAUDE.md",
+        "config/CLAUDE.md",
+        "assets/javascripts/discourse/CLAUDE.md"
+      ]
+    }
+  },
+  "siteSettings": [
+    {
+      "name": "journal_enabled",
+      "type": "boolean",
+      "default": true,
+      "client": true
+    },
+    {
+      "name": "journal_show_topic_tip",
+      "type": "boolean",
+      "default": true,
+      "client": true
+    },
+    {
+      "name": "journal_comments_default",
+      "type": "integer",
+      "default": 3,
+      "client": true
+    },
+    {
+      "name": "journal_entries_timeline",
+      "type": "boolean",
+      "default": false,
+      "client": true
+    }
+  ],
+  "categoryCustomFields": [
+    {
+      "name": "journal",
+      "type": "boolean",
+      "description": "Enable journal mode for the category"
+    },
+    {
+      "name": "journal_author_groups",
+      "type": "string",
+      "description": "Pipe-separated list of group names allowed to create entries"
+    }
+  ],
+  "apiEndpoints": [
+    {
+      "method": "POST",
+      "path": "/journal/update-sort-order",
+      "controller": "DiscourseJournal::JournalController#update_sort_order",
+      "access": "admin",
+      "description": "Trigger background job to recalculate post sort order for a category"
+    }
+  ],
+  "gaps": {
+    "tests": "No spec/ or test/ directory found. Plugin lacks automated tests.",
+    "documentation": "README.md is minimal. CLAUDE.md provides comprehensive documentation."
+  },
+  "nextSteps": [
+    "Consider adding RSpec tests for Guardian, Topic, and PostCreator extensions",
+    "Consider adding QUnit tests for JavaScript components and initializers",
+    "Consider adding CLAUDE.md for app/controllers and lib/journal modules"
+  ],
+  "changelog": [
+    {
+      "date": "2026-01-23",
+      "changes": [
+        "Initial architecture documentation created",
+        "Root CLAUDE.md updated with Mermaid diagram",
+        "Module CLAUDE.md files created for extensions, jobs, config, frontend"
+      ]
+    }
+  ]
+}

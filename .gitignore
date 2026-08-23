@@ -1,3 +1,6 @@
 node_modules
 /gems
 /auto_generated
+.idea/
+.serena/*
+.playwright-mcp/*

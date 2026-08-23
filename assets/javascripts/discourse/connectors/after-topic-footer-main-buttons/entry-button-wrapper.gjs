@@ -6,8 +6,7 @@ import DButton from "discourse/ui-kit/d-button";
 export default class EntryButtonWrapper extends Component {
   @action
   createEntry() {
-    const controller = getOwner(this).lookup("controller:topic");
-    controller.send("replyToPost");
+    getOwner(this).lookup("controller:topic").replyToPost();
   }
 
   <template>

@@ -5,10 +5,15 @@
   .topic-timeline .timeline-last-read {
     display: none;
   }
- .topic-timeline .reply-to-post, .topic-timeline .timeline-ago{
+
+  .topic-timeline .reply-to-post,
+  .topic-timeline .timeline-ago {
     display: flex;
   }
-  
+
+  #topic-footer-buttons > .topic-footer-main-buttons > button.create.topic-footer-button {
+    display: none;
+  }
 
   .topic-timeline .timeline-entries {
     position: absolute;
@@ -73,17 +78,10 @@
   .topic-body .reply-to-tab {
     cursor: initial;
   }
-}
 
-nav.post-controls button.comment {
-  font-size: 1em;
-}
-
-.topic-journal {
   // 确保文章容器有稳定的布局
   article.boxed.onscreen-post {
     min-height: 100px; // 预留最小高度，防止内容加载时布局抖动
-    contain: layout; // 使用 CSS containment 优化布局性能
   }
 
   // 确保内容区域有稳定的布局
@@ -102,6 +100,24 @@ nav.post-controls button.comment {
   .discourse-reactions-picker {
     z-index: 1500 !important; // 使用足够高的 z-index 确保显示完整
   }
+
+  // 只针对 topic-map 下拉，提升层级并保持不透明
+  .fk-d-menu[data-identifier^="topic-map__"] {
+    position: absolute !important;
+    z-index: 6000 !important;
+  }
+
+  .fk-d-menu[data-identifier^="topic-map__"] .fk-d-menu__inner-content,
+  .fk-d-menu-modal[data-identifier^="topic-map__"] .fk-d-menu__inner-content {
+    opacity: 1 !important;
+    background-color: var(--secondary) !important;
+    box-shadow: var(--shadow-dropdown) !important;
+  }
+
+}
+
+  nav.post-controls button.comment {
+  font-size: 1em;
 }
 
 div.topic-post {
@@ -112,7 +128,6 @@ div.topic-post {
     opacity: 0;
     visibility: hidden;
     transition: max-height 0.3s ease, opacity 0.3s ease, visibility 0.3s ease;
-    //border-left: 2px solid $primary-low;
 
     &.show {
       max-height: 500000px; // 足够大的值以容纳任何评论内容
@@ -170,8 +185,7 @@ div.topic-post {
         right: 0;
         margin: 0;
         z-index: 3;
-        //padding: 0.5em 1em;
-        border-top: 1px solid var(--header_background);
+        border-top: 0px solid var(--header_background);
       }
     }
 
@@ -188,13 +202,77 @@ div.topic-post {
   }
 }
 
-.show-comments {
-  margin-bottom: 10px;
-  display: inline-block;
+.journal-comment-pagination {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em;
+  margin: 0.5em 0 1em;
+
+  &.is-collapsed {
+    margin: 0.25em 0 0.75em;
+  }
 }
 
-.entry .show-comments {
-  padding-left: 105px;
+.journal-comment-pagination__expand {
+  background: none;
+  border: 0;
+  color: var(--tertiary);
+  cursor: pointer;
+  padding: 0;
+
+  &:hover,
+  &:focus {
+    color: var(--tertiary-hover);
+    text-decoration: underline;
+  }
+}
+
+.journal-comment-pagination__total {
+  color: var(--primary-medium);
+  font-size: var(--font-down-1);
+}
+
+.journal-comment-pagination__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35em;
+}
+
+.journal-comment-pagination__ellipsis {
+  align-items: center;
+  color: var(--primary-medium);
+  display: inline-flex;
+  min-height: 30px;
+  padding: 0 0.25em;
+}
+
+.journal-comment-pagination__page.is-active {
+  background: var(--tertiary);
+  color: var(--secondary);
+}
+
+.journal-comment-pagination__jump {
+  align-items: center;
+  display: inline-flex;
+  gap: 0.35em;
+
+  label {
+    align-items: center;
+    color: var(--primary-medium);
+    display: inline-flex;
+    gap: 0.35em;
+    margin: 0;
+  }
+
+  input {
+    margin: 0;
+    max-width: 5em;
+  }
+}
+
+.journal-comment-pagination__collapse {
+  white-space: nowrap;
 }
 
 .journal-topic-tip {
