@@ -1,12 +1,10 @@
 import Component from "@glimmer/component";
-import { action } from "@ember/object";
 import { on } from "@ember/modifier";
+import { action } from "@ember/object";
 import { service } from "@ember/service";
 import { i18n } from "discourse-i18n";
 
 export default class JournalShowCommentsToggle extends Component {
-  @service siteSettings;
-
   static shouldRender(args) {
     return (
       args.post?.journal &&
@@ -14,6 +12,8 @@ export default class JournalShowCommentsToggle extends Component {
       args.post?.hiddenComments > 0
     );
   }
+
+  @service siteSettings;
 
   get labelKey() {
     return Number(this.siteSettings.journal_comments_default) > 0
@@ -45,7 +45,12 @@ export default class JournalShowCommentsToggle extends Component {
   }
 
   <template>
-    <a href class="show-comments" role="button" {{on "click" this.showComments}}>
+    <a
+      href
+      class="show-comments"
+      role="button"
+      {{on "click" this.showComments}}
+    >
       {{this.label}}
     </a>
   </template>

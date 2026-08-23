@@ -1,4 +1,5 @@
-import discourseComputed from "discourse/lib/decorators";
+import { action, computed } from "@ember/object";
+import { scheduleOnce } from "@ember/runloop";
 import { withPluginApi } from "discourse/lib/plugin-api";
 
 const PLUGIN_ID = "discourse-journal";
@@ -11,49 +12,54 @@ export default {
       return;
     }
 
-    withPluginApi("0.8.12", (api) => {
-      api.modifyClass("component:d-navigation", {
-        pluginId: PLUGIN_ID,
+    withPluginApi((api) => {
+      api.modifyClass(
+        "component:d-navigation",
+        (Superclass) =>
+          class JournalNavigation extends Superclass {
+            static pluginId = PLUGIN_ID;
 
-        @discourseComputed("hasDraft", "category.journal")
-        createTopicLabel(hasDraft, journalCategory) {
-          if (journalCategory) {
-            return "topic.create_journal.label";
-          } else {
-            return this._super(...arguments);
-          }
-        },
-      });
-
-      api.modifyClass("route:discovery", {
-        pluginId: PLUGIN_ID,
-
-        discoveryCategory() {
-          if (this.router.currentRouteName === "discovery.category") {
-            return this.router.currentRoute.attributes.category;
-          } else {
-            return null;
-          }
-        },
-
-        actions: {
-          didTransition() {
-            const category = this.discoveryCategory();
-            if (category && category.journal) {
-              $("body").addClass("journal-category");
+            @computed("hasDraft", "category.journal")
+            get createTopicLabel() {
+              return this.category?.journal
+                ? "topic.create_journal.label"
+                : super.createTopicLabel;
             }
-            return this._super();
-          },
+          }
+      );
 
-          willTransition() {
-            const category = this.discoveryCategory();
-            if (category && category.journal) {
-              $("body").removeClass("journal-category");
+      api.modifyClass(
+        "route:discovery",
+        (Superclass) =>
+          class JournalDiscoveryRoute extends Superclass {
+            static pluginId = PLUGIN_ID;
+
+            discoveryCategory() {
+              return this.router.currentRouteName === "discovery.category"
+                ? this.router.currentRoute?.attributes?.category
+                : null;
             }
-            return this._super();
-          },
-        },
-      });
+
+            updateBodyClass() {
+              document.body.classList.toggle(
+                "journal-category",
+                Boolean(this.discoveryCategory()?.journal)
+              );
+            }
+
+            @action
+            didTransition() {
+              scheduleOnce("afterRender", this, this.updateBodyClass);
+              return super.didTransition?.(...arguments);
+            }
+
+            @action
+            willTransition() {
+              document.body.classList.remove("journal-category");
+              return super.willTransition?.(...arguments);
+            }
+          }
+      );
     });
   },
 };

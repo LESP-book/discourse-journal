@@ -1,8 +1,8 @@
 import Component from "@glimmer/component";
-import DButton from "discourse/components/d-button";
 import { action } from "@ember/object";
-import Composer from "discourse/models/composer";
 import { getOwner } from "@ember/owner";
+import Composer from "discourse/models/composer";
+import DButton from "discourse/ui-kit/d-button";
 
 export default class JournalCommentButton extends Component {
   static hidden() {

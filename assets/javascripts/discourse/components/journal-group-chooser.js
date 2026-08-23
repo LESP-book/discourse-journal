@@ -1,37 +1,37 @@
-import discourseComputed from "discourse/lib/decorators";
-import GroupChooser from "select-kit/components/group-chooser";
+import { action, computed } from "@ember/object";
+import GroupChooser from "discourse/select-kit/components/group-chooser";
 
-export default GroupChooser.extend({
-  valueProperty: "name",
-  labelProperty: "name",
+export default class JournalGroupChooser extends GroupChooser {
+  valueProperty = "name";
+  labelProperty = "name";
 
   didReceiveAttrs() {
-    this._super(...arguments);
-    const category = this.get("category");
+    super.didReceiveAttrs(...arguments);
+
+    const category = this.category;
     if (category.custom_fields?.journal_author_groups) {
       this.set(
         "value",
         category.custom_fields.journal_author_groups
           .split("|")
-          .filter((a) => a.length !== "")
+          .filter((groupName) => groupName.length !== 0)
       );
     }
-  },
+  }
 
-  @discourseComputed("site.groups")
-  content(siteGroups) {
-    return siteGroups;
-  },
+  @computed("site.groups")
+  get content() {
+    return this.site.groups;
+  }
 
-  actions: {
-    onChange(authorGroups) {
-      const category = this.get("category");
-      const customFields = category.custom_fields || {};
-      customFields["journal_author_groups"] = authorGroups.join("|");
-      this.setProperties({
-        value: authorGroups,
-        "category.custom_fields": customFields,
-      });
-    },
-  },
-});
+  @action
+  onChange(authorGroups) {
+    const category = this.category;
+    const customFields = category.custom_fields || {};
+    customFields.journal_author_groups = authorGroups.join("|");
+    this.setProperties({
+      value: authorGroups,
+      "category.custom_fields": customFields,
+    });
+  }
+}
