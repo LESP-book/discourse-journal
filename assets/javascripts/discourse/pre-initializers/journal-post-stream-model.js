@@ -13,6 +13,27 @@ import {
   moveStoredPost,
 } from "../lib/journal-post-stream";
 
+const updateFromJsonDepth = new WeakMap();
+
+function isUpdatingFromJson(postStream) {
+  return (updateFromJsonDepth.get(postStream) || 0) > 0;
+}
+
+function runDuringUpdateFromJson(postStream, callback) {
+  const previousDepth = updateFromJsonDepth.get(postStream) || 0;
+  updateFromJsonDepth.set(postStream, previousDepth + 1);
+
+  try {
+    return callback();
+  } finally {
+    if (previousDepth === 0) {
+      updateFromJsonDepth.delete(postStream);
+    } else {
+      updateFromJsonDepth.set(postStream, previousDepth);
+    }
+  }
+}
+
 export function registerPostStreamExtensions(api, siteSettings) {
   const PostStream = api.container.factoryFor("model:post-stream").class;
   const coreMethods = {
@@ -57,14 +78,16 @@ export function registerPostStreamExtensions(api, siteSettings) {
 
   api.addModelMethod("post-stream", "stagePost", function (post, ...args) {
     const result = coreMethods.stagePost.call(this, post, ...args);
-    afterPostMutation(this, post, siteSettings);
+    if (!isUpdatingFromJson(this)) {
+      afterPostMutation(this, post, siteSettings);
+    }
     return result;
   });
 
   api.addModelMethod("post-stream", "commitPost", function (post, ...args) {
     const result = coreMethods.commitPost.call(this, post, ...args);
 
-    if (!this.journal) {
+    if (!this.journal || isUpdatingFromJson(this)) {
       return result;
     }
 
@@ -88,7 +111,7 @@ export function registerPostStreamExtensions(api, siteSettings) {
 
   api.addModelMethod("post-stream", "prependPost", function (post, ...args) {
     const result = coreMethods.prependPost.call(this, post, ...args);
-    if (!this.journal) {
+    if (!this.journal || isUpdatingFromJson(this)) {
       return result;
     }
 
@@ -109,13 +132,22 @@ export function registerPostStreamExtensions(api, siteSettings) {
 
   api.addModelMethod("post-stream", "appendPost", function (post, ...args) {
     const result = coreMethods.appendPost.call(this, post, ...args);
-    afterPostMutation(this, post, siteSettings);
+    if (!isUpdatingFromJson(this)) {
+      afterPostMutation(this, post, siteSettings);
+    }
     return result;
   });
 
   api.addModelMethod("post-stream", "updateFromJson", function (...args) {
-    const result = coreMethods.updateFromJson.apply(this, args);
-    afterPostMutation(this, null, siteSettings);
+    const wasAlreadyUpdating = isUpdatingFromJson(this);
+    const result = runDuringUpdateFromJson(this, () =>
+      coreMethods.updateFromJson.apply(this, args)
+    );
+
+    if (!wasAlreadyUpdating) {
+      afterPostMutation(this, null, siteSettings);
+    }
+
     return result;
   });
 }
@@ -126,7 +158,11 @@ function ensureCommittedJournalPostLoaded(postStream, post, appendPost) {
   }
 
   const postTopicId = post.topic_id ?? post.topic?.id;
-  if (postStream.topic?.id && postTopicId && postStream.topic.id !== postTopicId) {
+  if (
+    postStream.topic?.id &&
+    postTopicId &&
+    postStream.topic.id !== postTopicId
+  ) {
     return false;
   }
 

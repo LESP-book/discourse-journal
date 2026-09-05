@@ -1,9 +1,19 @@
 import { action, computed } from "@ember/object";
 import { getOwner } from "@ember/owner";
-import { scheduleOnce } from "@ember/runloop";
 import { withPluginApi } from "discourse/lib/plugin-api";
 
 const PLUGIN_ID = "discourse-journal";
+
+export function createJournalTopicFooterButtons(Superclass) {
+  return class JournalTopicFooterButtons extends Superclass {
+    static pluginId = PLUGIN_ID;
+
+    @computed("showCreate", "topic.details.can_create_post", "topic.journal")
+    get showCreateButton() {
+      return this.topic?.journal ? false : super.showCreateButton;
+    }
+  };
+}
 
 export default {
   name: "journal-topic",
@@ -50,27 +60,7 @@ export default {
 
       api.modifyClass(
         "component:topic-footer-buttons",
-        (Superclass) =>
-          class JournalTopicFooterButtons extends Superclass {
-            static pluginId = PLUGIN_ID;
-
-            didInsertElement() {
-              super.didInsertElement(...arguments);
-
-              if (this.topic?.journal) {
-                scheduleOnce("afterRender", this, this.hideCreateButton);
-              }
-            }
-
-            hideCreateButton() {
-              const button = this.element?.querySelector(
-                ".topic-footer-main-buttons > button.create"
-              );
-              if (button) {
-                button.style.display = "none";
-              }
-            }
-          }
+        createJournalTopicFooterButtons
       );
 
       api.modifyClass(

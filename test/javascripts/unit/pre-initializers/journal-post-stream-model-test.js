@@ -39,13 +39,25 @@ function setupExtensions() {
       this.coreCalls.push("appendPost");
       this.coreArgs = args;
       this.posts.push(args[0]);
-      this.stream.push(args[0].id);
       return "append-result";
     }
 
     updateFromJson(...args) {
       this.coreCalls.push("updateFromJson");
       this.coreArgs = args;
+
+      const postStreamData = args[0];
+      this.posts.length = 0;
+      postStreamData?.posts?.forEach((post) => this.appendPost(post));
+
+      if (postStreamData?.stream) {
+        this.stream = [...postStreamData.stream];
+      }
+
+      if (this.failUpdate) {
+        throw new Error("update failed");
+      }
+
       return "update-result";
     }
   }
@@ -74,7 +86,7 @@ function setupExtensions() {
   return { CorePostStream, fields, getters, methods };
 }
 
-function buildStream(CorePostStream, getters, posts = []) {
+function buildStream(CorePostStream, getters, methods, posts = []) {
   const stream = new CorePostStream();
   stream.topic = { journal: true };
   stream.posts = posts;
@@ -86,6 +98,18 @@ function buildStream(CorePostStream, getters, posts = []) {
   stream._journalExpandedCommentPaginators = new Set();
   stream.coreCalls = [];
   Object.defineProperty(stream, "journal", { get: getters.get("journal") });
+
+  [
+    "appendPost",
+    "commitPost",
+    "prependPost",
+    "stagePost",
+    "updateFromJson",
+  ].forEach((methodName) => {
+    stream[methodName] = (...args) =>
+      methods.get(methodName).call(stream, ...args);
+  });
+
   return stream;
 }
 
@@ -119,17 +143,21 @@ module("Unit | Pre-initializer | journal post stream model", function () {
         reply_to_post_number: 1,
       })
     );
-    const stream = buildStream(setup.CorePostStream, setup.getters, [
-      entry,
-      ...comments,
-    ]);
+    const stream = buildStream(
+      setup.CorePostStream,
+      setup.getters,
+      setup.methods,
+      [entry, ...comments]
+    );
 
     setup.methods.get("setJournalCommentPage").call(stream, 1, 2);
 
     assert.strictEqual(stream._journalCommentPages[1], 2);
     assert.true(stream._journalExpandedCommentPaginators.has(1));
     assert.deepEqual(
-      comments.filter((comment) => comment.showComment).map((comment) => comment.id),
+      comments
+        .filter((comment) => comment.showComment)
+        .map((comment) => comment.id),
       [4]
     );
   });
@@ -146,10 +174,12 @@ module("Unit | Pre-initializer | journal post stream model", function () {
         reply_to_post_number: 1,
       })
     );
-    const stream = buildStream(setup.CorePostStream, setup.getters, [
-      entry,
-      ...comments,
-    ]);
+    const stream = buildStream(
+      setup.CorePostStream,
+      setup.getters,
+      setup.methods,
+      [entry, ...comments]
+    );
 
     const result = setup.methods
       .get("stagePost")
@@ -187,11 +217,12 @@ module("Unit | Pre-initializer | journal post stream model", function () {
       entry_post_id: 1,
       reply_to_post_number: 1,
     });
-    const stream = buildStream(setup.CorePostStream, setup.getters, [
-      entry,
-      firstComment,
-      secondComment,
-    ]);
+    const stream = buildStream(
+      setup.CorePostStream,
+      setup.getters,
+      setup.methods,
+      [entry, firstComment, secondComment]
+    );
 
     const result = setup.methods.get("commitPost").call(stream, newComment);
 
@@ -202,5 +233,105 @@ module("Unit | Pre-initializer | journal post stream model", function () {
     assert.false(firstComment.showComment);
     assert.false(secondComment.showComment);
     assert.true(newComment.showComment);
+
+    stream.coreCalls = [];
+    const refreshResult = stream.updateFromJson({
+      posts: [entry, newComment, firstComment, secondComment],
+      stream: [1, 4, 2, 3],
+    });
+
+    assert.strictEqual(refreshResult, "update-result");
+    assert.deepEqual(
+      stream.coreCalls,
+      [
+        "updateFromJson",
+        "appendPost",
+        "appendPost",
+        "appendPost",
+        "appendPost",
+      ],
+      "refresh dispatches each core append through the registered wrapper"
+    );
+    assert.strictEqual(stream._journalCommentPages[1], 2);
+    assert.deepEqual(
+      stream.posts.map((post) => post.id),
+      [1, 2, 3, 4]
+    );
+    assert.deepEqual(stream.stream, [1, 2, 3, 4]);
+    assert.false(firstComment.showComment);
+    assert.false(secondComment.showComment);
+    assert.true(newComment.showComment);
+  });
+
+  test("updateFromJson restores its refresh guard after an error", function (assert) {
+    const setup = setupExtensions();
+    const entry = buildPost({ id: 1, post_number: 1, entry: true });
+    const firstComment = buildPost({
+      id: 2,
+      post_number: 2,
+      comment: true,
+      entry_post_id: 1,
+      reply_to_post_number: 1,
+    });
+    const secondComment = buildPost({
+      id: 3,
+      post_number: 3,
+      comment: true,
+      entry_post_id: 1,
+      reply_to_post_number: 1,
+    });
+    const stream = buildStream(
+      setup.CorePostStream,
+      setup.getters,
+      setup.methods,
+      [entry]
+    );
+    stream.failUpdate = true;
+
+    assert.throws(
+      () =>
+        stream.updateFromJson({
+          posts: [entry, firstComment, secondComment],
+          stream: [1, 2, 3],
+        }),
+      /update failed/
+    );
+    assert.strictEqual(
+      firstComment.showComment,
+      undefined,
+      "intermediate mutations do not apply journal state"
+    );
+
+    stream.failUpdate = false;
+    const postAfterError = buildPost({
+      id: 4,
+      post_number: 4,
+      comment: true,
+      entry_post_id: 1,
+      reply_to_post_number: 1,
+    });
+    stream.appendPost(postAfterError);
+
+    assert.true(firstComment.showComment);
+    assert.false(postAfterError.showComment);
+  });
+
+  test("updateFromJson delegates for non-journal topics", function (assert) {
+    const setup = setupExtensions();
+    const post = buildPost({ id: 1, post_number: 1 });
+    const stream = buildStream(
+      setup.CorePostStream,
+      setup.getters,
+      setup.methods,
+      []
+    );
+    stream.topic.journal = false;
+
+    const result = stream.updateFromJson({ posts: [post], stream: [1] });
+
+    assert.strictEqual(result, "update-result");
+    assert.deepEqual(stream.coreCalls, ["updateFromJson", "appendPost"]);
+    assert.deepEqual(stream.posts, [post]);
+    assert.strictEqual(post.showComment, undefined);
   });
 });
