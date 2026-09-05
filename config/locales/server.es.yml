@@ -1,6 +1,7 @@
 es:
   site_settings:
-    journal_enabled: "Enable journal plugin."
-    journal_show_topic_tip: "Show a tip about journals under journal topic titles."
-    journal_comments_default: "Maximum number of comments to display on journal entries by default."
-    journal_entries_timeline: "Enable journal entries timeline."
+    journal_enabled: "Activar el complemento de diario."
+    journal_show_topic_tip: "Mostrar un consejo sobre los diarios debajo de los títulos de los temas del diario."
+    journal_comments_default: "Número de comentarios del diario que se mostrarán antes de expandir la paginación."
+    journal_comments_expanded_per_page: "Número de comentarios del diario que se mostrarán por página después de expandir la paginación. Si es inferior al número predeterminado de comentarios mostrados, se utilizará el número predeterminado."
+    journal_entries_timeline: "Activar la línea de tiempo de las publicaciones del diario."

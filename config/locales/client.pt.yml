@@ -1,59 +1,76 @@
 pt:
   js:
     category:
-      journal_settings_label: "Periódico"
-      enable_journal: "Habilitar periódico nesta categoria"
+      journal_settings_label: "Diário"
+      enable_journal: "Ativar o diário nesta categoria"
       update_sort_order:
-        label: "Atualizar a ordem da classificação das postagens"
-        description: "Se o journaling estiver habilitado, os tópicos serão ordenados como um diário. Se o journaling estiver desabilitado, os tópicos serão ordenados normalmente."
+        label: "Atualizar a ordem das publicações"
+        description: "Se o diário estiver ativado, os tópicos serão ordenados como um diário. Se estiver desativado, os tópicos serão ordenados normalmente."
         button: "Atualizar"
-      journal_authors: "Autores do periódico"
-      add_journal_authors: "Selecionar grupo de autores"
+      journal_authors: "Autores do diário"
+      add_journal_authors: "Selecionar grupos de autores"
+
     composer:
       composer_actions:
         create_journal:
-          name: Criar um periódico
-          description: Criar um novo periódico
+          name: "Criar um novo tópico"
+          description: "Criar um novo tópico"
         create_entry:
-          name: Criar entrada
-          description: Criar uma nova entrada em um periódico
+          name: "Criar uma nova resposta a este tópico (apresentada como uma nova publicação neste tópico)"
+          description: "Criar uma nova resposta a este tópico, apresentada como uma nova publicação"
         edit_entry:
-          name: Editar entrada
-          description: Editar a entrada do periódico
+          name: "Editar resposta"
+          description: "Editar esta resposta"
         create_comment:
-          name: Comentário
-          description: Comentar sobre a entrada do periódico
+          name: "Criar um comentário sobre esta publicação (apresentado abaixo desta publicação)"
+          description: "Comentar esta publicação; o comentário será apresentado abaixo desta publicação"
         edit_comment:
-          name: Editar comentário
-          description: Editar o comentário sobre a entrada do periódico
+          name: "Editar comentário"
+          description: "Editar este comentário"
         reply_to_comment:
-          name: Responder ao comentário
-          description: Responder ao comentário sobre a entrada do periódico
-    last_entry_lowercase: última entrada
+          name: "Responder (apresentada abaixo da publicação à qual esta resposta pertence)"
+          description: "Responder a este comentário; a resposta será apresentada abaixo da publicação"
+
+    last_entry_lowercase: "última publicação"
     entry_lowercase:
-      one: entrada
-      other: entradas
+      one: "publicação"
+      many: "publicações"
+      other: "publicações"
     comment_lowercase:
-      one: comentário
-      other: comentários
-    in_reply_to: Em resposta ao
+      one: "comentário"
+      many: "comentários"
+      other: "comentários"
+    in_reply_to: "Em resposta a"
+
     topic:
       create_journal:
-        label: "Criar diário"
+        label: "Criar tópico"
       entry:
-        title: "Nova entrada"
-        help: "começar a compor uma nova entrada"
-        jump_to: "Ir para a entrada %{entryNumber}"
+        title: "Nova resposta"
+        help: "Criar uma nova resposta a este tópico"
+        jump_to: "Ir para a publicação %{entryNumber}"
       comment:
-        title: 'Comentário'
-        help: 'começar a compor um comentário sobre essa entrada'
+        title: "Comentar esta publicação"
+        help: "Responder apenas a esta publicação"
+        pagination:
+          label: "Paginação de comentários"
+          expand: "Mostrar os {{count}} comentários restantes ({{total}} no total)"
+          total: "{{total}} comentários no total"
+          first: "Primeira"
+          previous: "Anterior"
+          next: "Seguinte"
+          last: "Última"
+          jump_label: "Ir para"
+          jump: "Ir"
+          collapse: "Colapsar"
         show_comments:
-          all: 'mostrar {{count}} comentários'
-          more: 'mostrar {{count}} mais comentários'
+          all: "mostrar {{count}} comentários"
+          more: "mostrar mais {{count}} comentários"
       comment_reply:
-        title: 'Responder'
-        help: 'responder ao comentário'
+        title: "Responder"
+        help: "Responder a este comentário"
+
       tip:
         journal:
-          title: "Periódico"
-          details: "Somente o autor do tópico pode realizar postagens. Todos os usuários podem postar comentários."
+          title: "Diário"
+          details: "Apenas o autor do tópico pode criar publicações. Todos os utilizadores podem publicar comentários."

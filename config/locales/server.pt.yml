@@ -1,6 +1,7 @@
 pt:
   site_settings:
-    journal_enabled: "Habilitar plugin de periódico."
-    journal_show_topic_tip: "Mostrar uma dica sobre os periódicos nos títulos dos tópicos do diário."
-    journal_comments_default: "Número máximo de comentários a serem exibidos nos lançamentos do periódico por padrão."
-    journal_entries_timeline: "Habilitar timeline de lançamento de periódicos."
+    journal_enabled: "Ativar o plugin de diário."
+    journal_show_topic_tip: "Mostrar uma dica sobre os diários sob os títulos dos tópicos do diário."
+    journal_comments_default: "Número de comentários do diário a apresentar antes de expandir a paginação."
+    journal_comments_expanded_per_page: "Número de comentários do diário a apresentar por página depois de expandir a paginação. Se for inferior ao número predefinido de comentários apresentados, será utilizado o número predefinido."
+    journal_entries_timeline: "Ativar a linha cronológica das publicações do diário."

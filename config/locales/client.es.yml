@@ -1,59 +1,76 @@
 es:
   js:
     category:
-      journal_settings_label: "Journal"
-      enable_journal: "Enable journaling in this category"
+      journal_settings_label: "Diario"
+      enable_journal: "Activar el diario en esta categoría"
       update_sort_order:
-        label: "Update post sort order"
-        description: "If journaling is enabled topics will be ordered as a journal. If journaling is disabled topics will be ordered normally."
-        button: "Update"
-      journal_authors: "Journal authors"
-      add_journal_authors: "Select author groups"
+        label: "Actualizar el orden de las publicaciones"
+        description: "Si el diario está activado, los temas se ordenarán como un diario. Si está desactivado, los temas se ordenarán normalmente."
+        button: "Actualizar"
+      journal_authors: "Autores del diario"
+      add_journal_authors: "Seleccionar grupos de autores"
+
     composer:
       composer_actions:
         create_journal:
-          name: Create Journal
-          description: Create a new journal
+          name: "Crear un tema nuevo"
+          description: "Crear un tema nuevo"
         create_entry:
-          name: Create Entry
-          description: Create a new entry in a journal
+          name: "Crear una respuesta nueva a este tema (se mostrará como una publicación nueva en este tema)"
+          description: "Crear una respuesta nueva a este tema, que se mostrará como una publicación nueva"
         edit_entry:
-          name: Edit Entry
-          description: Edit a journal entry
+          name: "Editar respuesta"
+          description: "Editar esta respuesta"
         create_comment:
-          name: Comment
-          description: Comment on a journal entry
+          name: "Crear un comentario sobre esta publicación (se mostrará debajo de esta publicación)"
+          description: "Comentar esta publicación; se mostrará debajo de esta publicación"
         edit_comment:
-          name: Edit Comment
-          description: Edit comment on a journal entry
+          name: "Editar comentario"
+          description: "Editar este comentario"
         reply_to_comment:
-          name: Reply to Comment
-          description: Reply to comment on a journal entry
-    last_entry_lowercase: last entry
+          name: "Responder (se mostrará debajo de la publicación a la que pertenece esta respuesta)"
+          description: "Responder a este comentario; se mostrará debajo de la publicación"
+
+    last_entry_lowercase: "última publicación"
     entry_lowercase:
-      one: entry
-      other: entries
+      one: "publicación"
+      many: "publicaciones"
+      other: "publicaciones"
     comment_lowercase:
-      one: comment
-      other: comments
-    in_reply_to: In reply to
+      one: "comentario"
+      many: "comentarios"
+      other: "comentarios"
+    in_reply_to: "En respuesta a"
+
     topic:
       create_journal:
-        label: "Create Journal"
+        label: "Crear tema"
       entry:
-        title: "New Entry"
-        help: "begin composing a new entry"
-        jump_to: "Jump to entry %{entryNumber}"
+        title: "Nueva respuesta"
+        help: "Crear una respuesta nueva a este tema"
+        jump_to: "Ir a la publicación %{entryNumber}"
       comment:
-        title: 'Comment'
-        help: 'begin composing a comment on this entry'
+        title: "Comentar esta publicación"
+        help: "Responder solo a esta publicación"
+        pagination:
+          label: "Paginación de comentarios"
+          expand: "Mostrar los {{count}} comentarios restantes ({{total}} en total)"
+          total: "{{total}} comentarios en total"
+          first: "Primera"
+          previous: "Anterior"
+          next: "Siguiente"
+          last: "Última"
+          jump_label: "Ir a"
+          jump: "Ir"
+          collapse: "Contraer"
         show_comments:
-          all: 'show {{count}} comments'
-          more: 'show {{count}} more comments'
+          all: "mostrar {{count}} comentarios"
+          more: "mostrar {{count}} comentarios más"
       comment_reply:
-        title: 'Reply'
-        help: 'reply to a comment'
+        title: "Responder"
+        help: "Responder a este comentario"
+
       tip:
         journal:
-          title: "Journal"
-          details: "Only the topic author can post entries. All users can post comments."
+          title: "Diario"
+          details: "Solo el autor del tema puede crear publicaciones. Todos los usuarios pueden publicar comentarios."

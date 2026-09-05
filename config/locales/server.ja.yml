@@ -1,6 +1,7 @@
 ja:
   site_settings:
-    journal_enabled: "Enable journal plugin."
-    journal_show_topic_tip: "Show a tip about journals under journal topic titles."
-    journal_comments_default: "Maximum number of comments to display on journal entries by default."
-    journal_entries_timeline: "Enable journal entries timeline."
+    journal_enabled: "ジャーナルプラグインを有効にする。"
+    journal_show_topic_tip: "ジャーナルのトピックタイトルの下にジャーナルについてのヒントを表示する。"
+    journal_comments_default: "ページネーションを展開する前にジャーナルの投稿に表示するコメント数。"
+    journal_comments_expanded_per_page: "展開後に1ページあたり表示するジャーナルのコメント数。デフォルトの表示数を下回る場合は、デフォルトの表示数が使用されます。"
+    journal_entries_timeline: "ジャーナルの投稿タイムラインを有効にする。"
