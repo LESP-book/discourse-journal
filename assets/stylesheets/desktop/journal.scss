@@ -23,13 +23,11 @@
         margin: 0;
       }
 
-      .post-controls .actions > *:not(.like):not(.double-button) {
-        // 使用 visibility 和 opacity 代替 display: none 来避免布局抖动
-        visibility: hidden;
+      .post-controls .actions > :not(:where(.like, .double-button)) {
+        // Keep controls in the tab order and leave nested menus unclipped.
         opacity: 0;
-        max-height: 0;
-        overflow: hidden;
-        transition: opacity 0.3s ease, visibility 0.3s ease, max-height 0.3s ease;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
       }
 
       .post-menu-area {
@@ -47,10 +45,10 @@
     }
   }
 
-  &:hover .topic-body .regular .post-controls .actions > * {
-    visibility: visible !important;
-    opacity: 1 !important;
-    max-height: 100px !important; // 足够容纳按钮的高度
+  &:hover .topic-body .regular .post-controls .actions > *,
+  &:focus-within .topic-body .regular .post-controls .actions > * {
+    opacity: 1;
+    pointer-events: auto;
   }
 }
 

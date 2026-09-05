@@ -127,6 +127,8 @@ div.topic-post {
 
     &.show {
       max-height: 500000px; // 足够大的值以容纳任何评论内容
+      // Visible comments must not clip reaction pickers or other post menus.
+      overflow: visible;
       opacity: 1;
       visibility: visible;
     }
