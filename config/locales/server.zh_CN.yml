@@ -1,0 +1,7 @@
+zh_CN:
+  site_settings:
+    journal_enabled: "启用日志插件。"
+    journal_show_topic_tip: "在日志话题标题下显示有关日志的提示。"
+    journal_comments_default: "展开分页前显示的日志评论数量。"
+    journal_comments_expanded_per_page: "展开分页后每页显示的日志评论数量。如果该数量低于默认显示数量，则使用默认显示数量。"
+    journal_entries_timeline: "启用日志条目时间线。"

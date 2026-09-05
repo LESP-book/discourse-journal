@@ -46,7 +46,7 @@ ja:
         help: "このトピックへの新しい返信を作成"
         jump_to: "投稿 %{entryNumber} に移動"
       comment:
-        title: "この投稿にコメント"
+        title: "コメント"
         help: "この投稿にのみ返信"
         pagination:
           label: "コメントのページネーション"

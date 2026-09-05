@@ -50,7 +50,7 @@ es:
         help: "Crear una respuesta nueva a este tema"
         jump_to: "Ir a la publicación %{entryNumber}"
       comment:
-        title: "Comentar esta publicación"
+        title: "Comentario"
         help: "Responder solo a esta publicación"
         pagination:
           label: "Paginación de comentarios"

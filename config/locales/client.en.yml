@@ -48,7 +48,7 @@ en:
         help: "Create a new reply to this topic"
         jump_to: "Jump to post %{entryNumber}"
       comment:
-        title: "Comment on this post"
+        title: "Comment"
         help: "Reply only to this post"
         pagination:
           label: "Comment pagination"

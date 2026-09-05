@@ -1,0 +1,74 @@
+zh_CN:
+  js:
+    category:
+      journal_settings_label: "日志"
+      enable_journal: "在此分类中启用日志"
+      update_sort_order:
+        label: "更新帖子排序"
+        description: "启用日志后，话题将按日志方式排序；禁用日志后，话题将按正常顺序排序。"
+        button: "更新"
+      journal_authors: "日志作者"
+      add_journal_authors: "选择作者组"
+
+    composer:
+      composer_actions:
+        create_journal:
+          name: "创建新话题"
+          description: "创建新话题"
+        create_entry:
+          name: "创建对本话题的新回复（在本话题中显示为新帖子）"
+          description: "创建对本话题的新回复，并将其显示为新帖子"
+        edit_entry:
+          name: "编辑回复"
+          description: "编辑此回复"
+        create_comment:
+          name: "对本帖发表评论（显示在本帖下方）"
+          description: "对本帖发表评论；评论将显示在帖子下方"
+        edit_comment:
+          name: "编辑评论"
+          description: "编辑此评论"
+        reply_to_comment:
+          name: "回复（显示在该回复所属帖子的下方）"
+          description: "回复此评论；回复将显示在该回复所属帖子的下方"
+
+    last_entry_lowercase: "最新帖子"
+    entry_lowercase:
+      one: "帖子"
+      other: "帖子"
+    comment_lowercase:
+      one: "评论"
+      other: "评论"
+    in_reply_to: "回复"
+
+    topic:
+      create_journal:
+        label: "创建话题"
+      entry:
+        title: "新回复"
+        help: "创建对本话题的新回复"
+        jump_to: "跳转到帖子 %{entryNumber}"
+      comment:
+        title: "评论"
+        help: "仅回复此帖子"
+        pagination:
+          label: "评论分页"
+          expand: "显示剩余 {{count}} 条评论（共 {{total}} 条）"
+          total: "共 {{total}} 条评论"
+          first: "首页"
+          previous: "上一页"
+          next: "下一页"
+          last: "末页"
+          jump_label: "跳转到"
+          jump: "跳转"
+          collapse: "收起"
+        show_comments:
+          all: "显示 {{count}} 条评论"
+          more: "显示另外 {{count}} 条评论"
+      comment_reply:
+        title: "回复"
+        help: "回复此评论"
+
+      tip:
+        journal:
+          title: "日志"
+          details: "只有话题作者可以发布条目。所有用户都可以发表评论。"
