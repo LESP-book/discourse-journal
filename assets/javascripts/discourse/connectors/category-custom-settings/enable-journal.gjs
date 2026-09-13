@@ -1,17 +1,33 @@
 import Component from "@glimmer/component";
 import { tracked } from "@glimmer/tracking";
-import { Input } from "@ember/component";
 import { action } from "@ember/object";
+import { service } from "@ember/service";
 import { ajax } from "discourse/lib/ajax";
+import GroupChooser from "discourse/select-kit/components/group-chooser";
 import DButton from "discourse/ui-kit/d-button";
 import DConditionalLoadingSpinner from "discourse/ui-kit/d-conditional-loading-spinner";
 import dIcon from "discourse/ui-kit/helpers/d-icon";
 import { i18n } from "discourse-i18n";
-import JournalGroupChooser from "../../components/journal-group-chooser";
 
 export default class EnableJournal extends Component {
+  @service site;
+
   @tracked updatingSortOrder = false;
   @tracked syncResultIcon;
+
+  get journalAuthorGroups() {
+    return (
+      this.args.outletArgs.transientData?.custom_fields
+        ?.journal_author_groups || ""
+    )
+      .split("|")
+      .filter(Boolean);
+  }
+
+  @action
+  async updateJournalAuthorGroups(authorGroups, { set, name }) {
+    await set(name, authorGroups.join("|"));
+  }
 
   @action
   async updateSortOrder() {
@@ -37,26 +53,40 @@ export default class EnableJournal extends Component {
   }
 
   <template>
-    <section>
-      <h3>{{i18n "category.journal_settings_label"}}</h3>
+    <@outletArgs.form.Section
+      @title={{i18n "category.journal_settings_label"}}
+      class="category-custom-settings-outlet journal-category-settings"
+    >
+      <@outletArgs.form.Object @name="custom_fields" as |customFields|>
+        <customFields.Field
+          @name="journal"
+          @title={{i18n "category.enable_journal"}}
+          @type="checkbox"
+          @format="full"
+          as |field|
+        >
+          <field.Control />
+        </customFields.Field>
 
-      <section class="field">
-        <label>
-          <Input
-            id="enable-journal-for-category"
-            @type="checkbox"
-            @checked={{@outletArgs.category.custom_fields.journal}}
-          />
-          {{i18n "category.enable_journal"}}
-        </label>
-      </section>
-
-      <section class="field">
-        <label for="category-journal-authors">
-          {{i18n "category.journal_authors"}}
-        </label>
-        <JournalGroupChooser @category={{@outletArgs.category}} />
-      </section>
+        <customFields.Field
+          @name="journal_author_groups"
+          @title={{i18n "category.journal_authors"}}
+          @onSet={{this.updateJournalAuthorGroups}}
+          @type="custom"
+          @format="full"
+          as |field|
+        >
+          <field.Control>
+            <GroupChooser
+              @content={{this.site.groups}}
+              @valueProperty="name"
+              @labelProperty="name"
+              @value={{this.journalAuthorGroups}}
+              @onChange={{field.set}}
+            />
+          </field.Control>
+        </customFields.Field>
+      </@outletArgs.form.Object>
 
       <section class="field">
         <h4 id="category-journal-update-sort-order">
@@ -80,6 +110,6 @@ export default class EnableJournal extends Component {
           />
         {{/if}}
       </section>
-    </section>
+    </@outletArgs.form.Section>
   </template>
 }
